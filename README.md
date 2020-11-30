@@ -12,7 +12,7 @@ date: \today
 
 World Development Indicators obtained from https://databank.worldbank.org/source/world-development-indicators [@world_bank_databank]. Table \ref{table:WDIData} shows the 10 first rows out of the data file.
 
-Table: sample from WDIData.csv file. \label{table:WDIData}
+Table: sample from WDIData.csv file. A 380160x66 matrix. \label{table:WDIData}
 
 | Country Name   | Country Code   | Indicator Name   | Indicator Code   |   1960 | ...   |   2018 |
 |:---------------|:---------------|:-----------------|:-----------------|-------:|:------|-------:|
@@ -30,7 +30,7 @@ Table: sample from WDIData.csv file. \label{table:WDIData}
 
 Human Development Index from http://hdr.undp.org/en/data [@human_dev_index].Table \ref{table:HDI} shows the 10 first rows out of the data file.
 
-Table: sample from HDI.csv file. \label{table:HDI}
+Table: sample from HDI.csv file. A 212x31 matrix. \label{table:HDI}
 
 |   HDI Rank (2018) | Country         |    1990 |    1991 | ...   |   2018 |
 |------------------:|:----------------|--------:|--------:|:------|-------:|
@@ -76,20 +76,20 @@ The result is the chart from figure \ref{fig2}. There we can observe that we wis
 
 Table \ref{table:WDI} shows the 10 first rows out of the prepared data file.
 
-Table: sample from WDI.csv file. \label{table:WDI}
+Table: sample from WDI.csv file. A 573x372 matrix. \label{table:WDI}
 
-| Country - Year   |   Population a... |   Merchandise ... |   Population a... | ...   |   $HDI_{\Delta}$ |
+| Country - Year   |   Birth rate, ... |   Population d... |   Adjusted sav... | ...   |   $HDI_{\Delta}$ |
 |:-----------------|------------------:|------------------:|------------------:|:------|-----------------:|
-| Afghanistan ...  |             51.5  |          40.36    |             3.831 | ...   |            0.006 |
-| Albania - 2000   |             62.57 |           0.3998  |             6.54  | ...   |            0.02  |
-| Albania - 2005   |             65.08 |           0.4492  |             7.336 | ...   |            0.022 |
-| Albania - 2010   |             67.43 |           0.07844 |             6.935 | ...   |            0.041 |
-| Albania - 2015   |             68.79 |           0.397   |             6.591 | ...   |            0.003 |
-| Algeria - 2000   |             60.39 |           0.1159  |             4.916 | ...   |            0.03  |
-| Algeria - 2005   |             65.11 |           0.5955  |             5.55  | ...   |            0.017 |
-| Algeria - 2010   |             67.22 |           0.47    |             5.948 | ...   |            0.016 |
-| Algeria - 2015   |             66.01 |           0.02024 |             6.2   | ...   |            0.008 |
-| Angola - 2000    |             49.83 |           9.724   |             3.644 | ...   |            0.034 |
+| Afghanistan ...  |          -0.9417  |             51.08 |           6081000 | ...   |            0.006 |
+| Albania - 2000   |          -0.9063  |            113.5  |          12910000 | ...   |            0.02  |
+| Albania - 2005   |          -0.6313  |            110.4  |           3333000 | ...   |            0.022 |
+| Albania - 2010   |           0       |            106.9  |           5676000 | ...   |            0.041 |
+| Albania - 2015   |          -0.01933 |            105.4  |           9043000 | ...   |            0.003 |
+| Algeria - 2000   |          -0.8057  |             12.86 |         -92920000 | ...   |            0.03  |
+| Algeria - 2005   |           0.579   |             13.73 |         173000000 | ...   |            0.017 |
+| Algeria - 2010   |           0.6613  |             14.84 |         254800000 | ...   |            0.016 |
+| Algeria - 2015   |           0.039   |             16.35 |         471600000 | ...   |            0.008 |
+| Angola - 2000    |          -0.159   |             12.73 |          23940000 | ...   |            0.034 |
 
 
 # Statistical Analysis
