@@ -1,0 +1,37 @@
+Indicator Code,Indicator Name
+EG.CFT.ACCS.ZS,Access to clean fuels and technologies for cooking (% of population)
+NY.ADJ.AEDU.GN.ZS,Adjusted savings: education expenditure (% of GNI)
+SP.ADO.TFRT,"Adolescent fertility rate (births per 1,000 women ages 15-19)"
+SP.POP.DPND,Age dependency ratio (% of working-age population)
+AG.LND.ARBL.ZS,Arable land (% of land area)
+SP.DYN.CBRT.IN,"Birth rate, crude (per 1,000 people)"
+EN.ATM.CO2E.PC,CO2 emissions (metric tons per capita)
+SP.DYN.CDRT.IN,"Death rate, crude (per 1,000 people)"
+SH.XPD.GHED.PC.CD,Domestic general government health expenditure per capita (current US$)
+SP.DYN.TFRT.IN,"Fertility rate, total (births per woman)"
+AG.PRD.FOOD.XD,Food production index (2004-2006 = 100)
+NY.GDP.MKTP.CD,GDP (current US$)
+IT.NET.USER.ZS,Individuals using the Internet (% of population)
+NY.GDP.DEFL.KD.ZG,"Inflation, GDP deflator (annual %)"
+SP.DYN.LE00.IN,"Life expectancy at birth, total (years)"
+TX.VAL.MRCH.CD.WT,Merchandise exports (current US$)
+TM.VAL.MRCH.CD.WT,Merchandise imports (current US$)
+TG.VAL.TOTL.GD.ZS,Merchandise trade (% of GDP)
+SP.DYN.IMRT.IN,"Mortality rate, infant (per 1,000 live births)"
+SH.DYN.MORT,"Mortality rate, under-5 (per 1,000 live births)"
+SH.STA.ODFC.ZS,People practicing open defecation (% of population)
+SH.H2O.BASW.ZS,People using at least basic drinking water services (% of population)
+SH.STA.BASS.ZS,People using at least basic sanitation services (% of population)
+SP.POP.0014.TO.ZS,Population ages 0-14 (% of total population)
+SP.POP.1564.TO.ZS,Population ages 15-64 (% of total population)
+SP.POP.65UP.TO.ZS,Population ages 65 and above (% of total population)
+SP.POP.GROW,Population growth (annual %)
+SP.POP.TOTL.FE.ZS,"Population, female (% of total population)"
+SE.PRM.DURS,"Primary education, duration (years)"
+SP.RUR.TOTL.ZS,Rural population (% of total population)
+SP.RUR.TOTL.ZG,Rural population growth (annual %)
+IP.JRN.ARTC.SC,Scientific and technical journal articles
+SE.SEC.DURS,"Secondary education, duration (years)"
+SP.URB.TOTL.IN.ZS,Urban population (% of total population)
+SP.URB.GROW,Urban population growth (annual %)
+SG.LAW.INDX,Women Business and the Law Index Score (scale 1-100)
