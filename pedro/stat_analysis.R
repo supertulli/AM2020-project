@@ -1,11 +1,12 @@
 library(readr)
 library(dplyr)
+library(psych)
 library(tidyverse)
 WDI <- read_csv("Documents/MECD/SEM01/AM/Proj/AM2020-project/data/WDI_shortnames.csv")
-View(WDI)
+head(WDI)
 
 data <- WDI[,-c(71,72)] # removing the outcome variables
-View(data)
+head(data)
 
 data <- data[, order(names(data))]
 colnames(data)
@@ -13,11 +14,12 @@ colnames(data)
 outcome <- WDI[,c(71,72)]
 
 colnames(outcome) <- c('HDI_var', 'HDI_rank')
-
 outcome$`HDI_rank` <- as.factor(outcome$`HDI_rank`)
+summary(outcome)
+sapply(outcome[,1], sd)
+describe(outcome)
 
 # Getting subsets of the data by theme:
-
 economical <- data %>% select((starts_with('eco') & -ends_with('var'))) # economical instant values
 summary(economical)
 
@@ -113,3 +115,16 @@ boxplot(hs.OpenDefecation.var ~ `HDI_rank`,data = hs.var_out)
 
 # par(mfrow=c(3,3),cex = 0.5)
 
+
+# mRMR feature selection:
+
+dd <- mRMR.data(data = data[,-1])
+mrmr <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
+feature_index <- mrmr@filters$'1'
+colnames(data[,-1])[feature_index]
+
+mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
+feature_index <- mrmr@filters
+feature_index$'1'[,1]
+
+colnames(data[,-1])[feature_index]
