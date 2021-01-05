@@ -51,7 +51,7 @@ health_sanitation.var <- data %>% select((starts_with('hs') & ends_with('var')))
 summary(health_sanitation.var)
 
 # histograms and correlations per group
-library(psych)
+
 # for economical instant values. GDP EXPORTS and IMPORTS are in a different scale so are grouped separately
 pairs.panels(economical[,-c(4,6,7)], smooth = FALSE, ellipses = FALSE)
 pairs.panels(economical[,c(4,6,7)], smooth = F, ellipses = F)
@@ -123,18 +123,56 @@ mrmr <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr@filters$'1'
 colnames(data[,-1])[feature_index]
 
-mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
-feature_index <- mrmr@filters
-feature_index$'1'[,1]
-colnames(data[,-1])[feature_index]
+# mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
+# feature_index <- mrmr@filters$'1'
 
+selected_features <- colnames(data[,-1])[feature_index]
+selected_features
+data_selected <- data %>% select(selected_features)
+describe(data_selected)
+pairs.panels(data_selected, ellipses = F, smooth = F)
+cor(data_selected)
+
+data_out <- cbind(data_selected,outcome[,2])
+describeBy(data_out[,-17]~HDI_rank)
+boxplot(data_out$dem.MortalityInfant ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$dem.BirthRate.var ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$eco.CO2Emissions ~ data_out$HDI_rank, data = data_out)
+
+library(DataExplorer)
+introduce(data_out)
+create_report(data_out)
+plot_correlation(data_out[,1:16])
+plot_boxplot(data_out, by='HDI_rank', nrow = 4, ncol = 4, )
+plot_qq(data_out[,1:16], nrow = 4, ncol = 4)
+plot_histogram(data_out)
+plot_density(data_out)
+plot_prcomp(data_out[,-17], variance_cap = 0.90)
+
+create_report(data_out)
+
+#######################################
 #the same with full data set
 
 WDI_full <- read_csv("/home/pedro/Documents/MECD/SEM01/AM/Proj/AM2020-project/data/WDI_full.csv")
 head(WDI_full)
 
+outcome_full <- WDI_full[,c(369,370)]
+colnames(outcome_full) <- c('HDI_var', 'HDI_rank')
+outcome_full$`HDI_rank` <- as.factor(outcome_full$`HDI_rank`)
+
+# WDI_full[,c(369,370)]
 data_full <- WDI_full[,-c(369,370)]
 dd_full <- mRMR.data(data_full[,-1])
-mrmr <- mRMR.classic(data = dd_full, target_indices = c(1), feature_count = 30)
+mrmr <- mRMR.classic(data = dd_full, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr@filters$'1'
-colnames(data_full[,-1])[feature_index]
+selected_features <- colnames(data_full[,-1])[feature_index]
+selected_features
+data_selected <- data_full %>% select(selected_features)
+describe(data_selected)
+pairs.panels(data_selected, ellipses = F, smooth = F)
+cor(data_selected)
+
+data_out_full <- cbind(data_selected,outcome_full[,2])
+describeBy(data_out_full[,-17]~HDI_rank)
+boxplot(data_out_full$`Fixed telephone subscriptions - Delta`~data_out_full$HDI_rank, data = data_out_full)
