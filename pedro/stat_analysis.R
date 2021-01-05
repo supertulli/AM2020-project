@@ -126,5 +126,15 @@ colnames(data[,-1])[feature_index]
 mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
 feature_index <- mrmr@filters
 feature_index$'1'[,1]
-
 colnames(data[,-1])[feature_index]
+
+#the same with full data set
+
+WDI_full <- read_csv("/home/pedro/Documents/MECD/SEM01/AM/Proj/AM2020-project/data/WDI_full.csv")
+head(WDI_full)
+
+data_full <- WDI_full[,-c(369,370)]
+dd_full <- mRMR.data(data_full[,-1])
+mrmr <- mRMR.classic(data = dd_full, target_indices = c(1), feature_count = 30)
+feature_index <- mrmr@filters$'1'
+colnames(data_full[,-1])[feature_index]
