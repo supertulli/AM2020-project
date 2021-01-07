@@ -1,0 +1,37 @@
+Indicator_Code,Short_Name,Indicator_Name
+EG.CFT.ACCS.ZS,eco.CleanCook,Access to clean fuels and technologies for cooking (% of population)
+NY.ADJ.AEDU.GN.ZS,sci.EduExpense,Adjusted savings: education expenditure (% of GNI)
+SP.ADO.TFRT,dem.AdolescentFertRate,"Adolescent fertility rate (births per 1,000 women ages 15-19)"
+SP.POP.DPND,eco.AgeDependancyRate,Age dependency ratio (% of working-age population)
+AG.LND.ARBL.ZS,geo.ArableLand,Arable land (% of land area)
+SP.DYN.CBRT.IN,dem.BirthRate,"Birth rate, crude (per 1,000 people)"
+EN.ATM.CO2E.PC,eco.CO2Emissions,CO2 emissions (metric tons per capita)
+SP.DYN.CDRT.IN,dem.DeathRate,"Death rate, crude (per 1,000 people)"
+SH.XPD.GHED.PC.CD,hs.GovHealthExpend,Domestic general government health expenditure per capita (current US$)
+SP.DYN.TFRT.IN,dem.FertilityRate,"Fertility rate, total (births per woman)"
+AG.PRD.FOOD.XD,eco.FoodProdIdx,Food production index (2004-2006 = 100)
+NY.GDP.MKTP.CD,eco.GDP,GDP (current US$)
+IT.NET.USER.ZS,sci.Internet,Individuals using the Internet (% of population)
+NY.GDP.DEFL.KD.ZG,eco.Inflation,"Inflation, GDP deflator (annual %)"
+SP.DYN.LE00.IN,dem.LifeExpectancy,"Life expectancy at birth, total (years)"
+TX.VAL.MRCH.CD.WT,eco.Exports,Merchandise exports (current US$)
+TM.VAL.MRCH.CD.WT,eco.Imports,Merchandise imports (current US$)
+TG.VAL.TOTL.GD.ZS,eco.MerchTrade,Merchandise trade (% of GDP)
+SP.DYN.IMRT.IN,dem.MortalityInfant,"Mortality rate, infant (per 1,000 live births)"
+SH.DYN.MORT,dem.MortalityUnder5,"Mortality rate, under-5 (per 1,000 live births)"
+SH.STA.ODFC.ZS,hs.OpenDefecation,People practicing open defecation (% of population)
+SH.H2O.BASW.ZS,hs.DrinkingWater,People using at least basic drinking water services (% of population)
+SH.STA.BASS.ZS,hs.BasicSanitation,People using at least basic sanitation services (% of population)
+SP.POP.0014.TO.ZS,dem.Pop0to14,Population ages 0-14 (% of total population)
+SP.POP.1564.TO.ZS,dem.Pop15to64,Population ages 15-64 (% of total population)
+SP.POP.65UP.TO.ZS,dem.over64,Population ages 65 and above (% of total population)
+SP.POP.GROW,dem.PopGrowth,Population growth (annual %)
+SP.POP.TOTL.FE.ZS,dem.FemalePop,"Population, female (% of total population)"
+SE.PRM.DURS,sci.PrimaryDuration,"Primary education, duration (years)"
+SP.RUR.TOTL.ZS,geo.RuralPop,Rural population (% of total population)
+SP.RUR.TOTL.ZG,geo.RuralPopGrowth,Rural population growth (annual %)
+IP.JRN.ARTC.SC,sci.Articles,Scientific and technical journal articles
+SE.SEC.DURS,sci.SecundaryDuration,"Secondary education, duration (years)"
+SP.URB.TOTL.IN.ZS,geo.UrbanPop,Urban population (% of total population)
+SP.URB.GROW,geo.UrbanGrowth,Urban population growth (annual %)
+SG.LAW.INDX,sci.WomenBusinessLaw,Women Business and the Law Index Score (scale 1-100)
