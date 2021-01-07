@@ -1,6 +1,6 @@
 library(readr) # read_csv
 # read and prepare data
-WDI <- read_csv("../data/WDI.csv")
+WDI <- read_csv("../data/WDI_shortnames.csv")
 WDI_indicators<-WDI[,c(2:(length(WDI)-2))] # the last two columns are the HDI-delta and categorical HDI and the first is the country/year pair
 HDI<-WDI[,c(length(WDI)-1, length(WDI))] # target variables
 WDI_countryYear<-WDI[,1] # name of each sample (not relevant for the numerical analysis)
@@ -33,27 +33,27 @@ grid()
 
 # Choice of principal components
 # 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
-k_1 = 0
+{k_1 = 0
 for (value in WDI_indicators.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
-k_1 # show the value of k_1
+k_1} # show the value of k_1
 
 # 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
-k_0.8 = 0
+{k_0.8 = 0
 for (value in cumulative_variance){if (value < 0.8) k_0.8 = k_0.8+1}
 if(cumulative_variance[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
-k_0.8 # show the value of k_0.8
+k_0.8} # show the value of k_0.8
 
 # 3. Find the elbow
 screeplot(WDI_indicators.pca,type = "lines", cex = 0.2, npcs = length(WDI_indicators.pca$sdev)/3)
 abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
 mean(WDI_indicators.pca$sdev^2)
 WDI_indicators.pca$sdev
-k = min(k_1, k_0.8) # choose the minimum value
+k = min(k_1, k_0.8);k # choose the minimum value
 
 # Transform data
 WDI_indicators_afterPCA <- WDI_indicators.pca$x%*% WDI_indicators.pca$rotation[,1:k] #transform data according to the chosen k
 
-
+# understanding the loadings
 count_magnitude<-rep(0, length(WDI_indicators.pca$rotation[,1]))
 for(i in 1:length(count_magnitude)){
   for(j in 1:k){
@@ -63,18 +63,18 @@ for(i in 1:length(count_magnitude)){
 barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2)
 
 ###########################################
-# Dataset with and without "delta" values # 
+# Dataset with and without "delta" values #
 ###########################################
 
 # find the indices of the columns that correspond to a "delta" value
-delta_indx <- grepl('Delta', colnames(WDI)) 
+delta_indx <- grepl('var', colnames(WDI))
 
 # Considering the dataset without the Deltas
 WDI_noDeltas <- WDI[!delta_indx] # consider only the columns that do not correspond to a "Delta" value
-WDI_indicators_noDeltas <- WDI_noDeltas[,c(2:(length(WDI_noDeltas)))] # remove the country/year pair (the HDI has Delta on its name)
+WDI_indicators_noDeltas <- WDI_noDeltas[,c(2:(length(WDI_noDeltas)-2))] # remove the country/year pair and the HDI
 
 #PCA on the indicators with no deltas centering and scaling
-WDI_indicators_noDeltas.pca<-prcomp(WDI_indicators_noDeltas, center=TRUE, scale. = TRUE) 
+WDI_indicators_noDeltas.pca<-prcomp(WDI_indicators_noDeltas, center=TRUE, scale. = TRUE)
 summary(WDI_indicators_noDeltas.pca)
 
 # Proportion of variance explained by each principal component
@@ -86,13 +86,13 @@ grid()
 # Cumulative variance explained by each principal component
 cumulative_variance_noDeltas <- cumsum(variance_proportion_noDeltas) # compute the cumulative variance explained by each component
 # plot
-plot(cumulative_variance_noDeltas, ylab = "Cumulative Explained Variance", xlab = "Principal Component Index", main = "Cumulative variance explained by each PC")
-abline(0.8,0)
-grid()
+plot(cumulative_variance_noDeltas, 
+     ylab = "Cumulative Explained Variance", 
+     xlab = "Principal Component Index", main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
 
 # Choice of principal components
 # 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
-k_1 = 0
+{k_1 = 0
 for (value in WDI_indicators_noDeltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
 k_1 # show the value of k_1
 
@@ -102,7 +102,7 @@ for (value in cumulative_variance_noDeltas){if (value < 0.8) k_0.8 = k_0.8+1}
 if(cumulative_variance_noDeltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
 k_0.8 # show the value of k_0.8
 
-k = min(k_1, k_0.8) # choose the minimum value
+k = min(k_1, k_0.8);k} # choose the minimum value
 
 # Transform data
 WDI_indicators_noDeltas_afterPCA <- WDI_indicators_noDeltas.pca$x%*% WDI_indicators_noDeltas.pca$rotation[,1:k] #transform data according to the chosen k
@@ -110,39 +110,41 @@ WDI_indicators_noDeltas_afterPCA <- WDI_indicators_noDeltas.pca$x%*% WDI_indicat
 ###############################
 # Considering only the Deltas #
 ###############################
-WDI_Deltas<- WDI[delta_indx] # consider only the columns that correspond to a "Delta"
-WDI_indicators_Deltas <- WDI_Deltas[,c(1:(length(WDI_noDeltas)-1))] # remove the HDI
+WDI_indicators_Deltas<- WDI[delta_indx] # consider only the columns that correspond to a "Delta"
+
 #PCA on the indicators with no deltas centering and scaling
-WDI_indicators_Deltas.pca<-prcomp(WDI_indicators_Deltas, center=TRUE, scale. = TRUE) 
+WDI_indicators_Deltas.pca<-prcomp(WDI_indicators_Deltas, center=TRUE, scale. = TRUE)
 summary(WDI_indicators_Deltas.pca)
 
 # Proportion of variance explained by each component
 variance_proportion_Deltas <- WDI_indicators_Deltas.pca$sdev^2/sum(WDI_indicators_Deltas.pca$sdev^2) #vector of the proportion of variance explained by each component
 # plot
-plot(variance_proportion_Deltas, ylab = "Proportion of variance", xlab = "Principal Component Index", main = "Proportion of variance explained by each PC")
-grid()
+plot(variance_proportion_Deltas, 
+     ylab = "Proportion of variance", 
+     xlab = "Principal Component Index", 
+     main = "Proportion of variance explained by each PC");grid()
 
 # Cumulative variance explained by each component
 cumulative_variance_Deltas <- cumsum(variance_proportion_Deltas) #compute the cumulative variance
 # plot
-plot(cumulative_variance_Deltas, ylab = "Cumulative Explained Variance", xlab = "Principal Component Index", main = "Cumulative variance explained by each PC")
-abline(0.8,0)
-grid()
+plot(cumulative_variance_Deltas, 
+     ylab = "Cumulative Explained Variance", 
+     xlab = "Principal Component Index", 
+     main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
 
 # Choice of principal components
 # 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
-k_1 = 0 
+{k_1 = 0; 
 for (value in WDI_indicators_Deltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
 k_1 # show the value of k_1
 
 # 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
-k_0.8 = 0
+k_0.8 = 0;
 for (value in cumulative_variance_Deltas){if (value < 0.8) k_0.8 = k_0.8+1}
 if(cumulative_variance_Deltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
 k_0.8 # show the value of k_0.8
-
 # choose the minimum value
-k = min(k_1, k_0.8) 
+k = min(k_1, k_0.8); k}
 
 # Transform data
 WDI_indicators_Deltas_afterPCA <- WDI_indicators_Deltas.pca$x%*% WDI_indicators_Deltas.pca$rotation[,1:k] #transform data according to the chosen k
