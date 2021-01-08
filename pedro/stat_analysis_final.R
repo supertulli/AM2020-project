@@ -3,6 +3,7 @@ library(dplyr)
 library(psych)
 library(tidyverse)
 library(DataExplorer)
+library(mRMRe)
 
 options(digits=3)
 
@@ -81,92 +82,36 @@ geographic <- data %>% select((starts_with('geo') & -ends_with('var'))) #geograp
 #summary(geographic)
 describe(geographic)
 pairs.panels(geographic, ellipses = F, smooth = F)
-# correlation betwwen Urban and Rural population is -1 as to be expected
+# correlation between Urban and Rural population is -1 as to be expected
 plot_correlation(geographic, title = "Geographic features correlations heatmap")
 plot_boxplot(bind_cols(geographic, outcome[,2]), by='HDI_rank', title = "Geographic features by HDI_rank", ncol = 3, nrow = 2)
 plot_qq(geographic, title = "Geographic features Q-Q plots")#, ncol = 4, nrow = 3)
 
 geographic.var <- data %>% select((starts_with('geo') & ends_with('var'))) #geographic variation values
 #summary(geographic.var)
-describe(geographic)
-pairs.panels(geographic, ellipses = F, smooth = F)
-# correlation betwwen Urban and Rural population is -1 as to be expected
-plot_correlation(geographic, title = "Geographic features correlations heatmap")
-plot_boxplot(bind_cols(geographic, outcome[,2]), by='HDI_rank', title = "Geographic features by HDI_rank", ncol = 3, nrow = 2)
-plot_qq(geographic, title = "Geographic features Q-Q plots")#, ncol = 4, nrow = 3)
+describe(geographic.var)
+pairs.panels(geographic.var, ellipses = F, smooth = F)
+# correlation between Urban and Rural population variations is also -1 as to be expected
+plot_correlation(geographic.var, title = "Geographic variation features correlations heatmap")
+plot_boxplot(bind_cols(geographic.var, outcome[,2]), by='HDI_rank', title = "Geographic variation features by HDI_rank", ncol = 1, nrow = 3)
+plot_qq(geographic.var, title = "Geographic variation features Q-Q plots")#, ncol = 4, nrow = 3)
 
 ##### Health and Sanitation
 health_sanitation <-data %>% select((starts_with('hs') & -ends_with('var'))) #health and sanitation instant values
-summary(health_sanitation)
+#summary(health_sanitation)
+describe(health_sanitation)
+pairs.panels(health_sanitation, ellipses = F, smooth = F)
+plot_correlation(health_sanitation, title = "Health and sanitation features correlations heatmap")
+plot_boxplot(bind_cols(health_sanitation, outcome[,2]), by='HDI_rank', title = "Health and sanitation features by HDI_rank", ncol = 2, nrow = 2)
+plot_qq(health_sanitation, title = "Health and sanitation features Q-Q plots", ncol = 2, nrow = 2)
 
 health_sanitation.var <- data %>% select((starts_with('hs') & ends_with('var'))) #health and sanitation variation values
-summary(health_sanitation.var)
-
-# histograms and correlations per group
-
-# for economical instant values. GDP EXPORTS and IMPORTS are in a different scale so are grouped separately
-pairs.panels(economical[,-c(4,6,7)], smooth = FALSE, ellipses = FALSE)
-pairs.panels(economical[,c(4,6,7)], smooth = F, ellipses = F)
-
-boxplot(economical[,-c(4,6,7)])
-boxplot(economical[,c(4,6,7)], log="y") # make notice of log scale in y axes
-
-# for economical variation values. GDP EXPORTS and IMPORTS are in a different scale so are grouped separately
-pairs.panels(economical.var[,-c(4,6,7)], smooth = FALSE, ellipses = FALSE)
-pairs.panels(economical.var[,c(4,6,7)], smooth = F, ellipses = F)
-boxplot(economical.var[,-c(4,6,7)])
-boxplot(economical.var[,c(4,6,7)])
-
-# for demographic values variables
-pairs.panels(demographic, smooth = F, ellipses = F)
-boxplot(demographic)
-pairs.panels(demographic.var, smooth = F, ellipses = F)
-boxplot(demographic.var)
-
-# for education and science variables
-pairs.panels(education_science, smooth = F, ellipses = F)
-boxplot(education_science[,1])
-boxplot(education_science[,-1])
-pairs.panels(education_science.var, smooth = F, ellipses = F)
-boxplot(education_science.var)
-boxplot(education_science.var[,-1])
-
-# Some variables that are interesting to see by outcome:
-sci_out <- bind_cols(education_science, outcome)
-boxplot(sci.Internet ~ HDI_rank, data = sci_out)
-
-# for geographic variables
-pairs.panels(geographic, smooth = F, ellipses = F)
-boxplot(geographic[,-c(3,4)])
-boxplot(geographic[,c(3,4)])
-
-geo_out <- bind_cols(geographic, outcome)
-boxplot(geo.RuralPopGrowth ~ `HDI_rank`,data = geo_out)
-
-pairs.panels(geographic.var, smooth = F, ellipses = F)
-boxplot(geographic.var)
-
-geo.var_out <- bind_cols(geographic.var, outcome)
-boxplot(geo.ArableLand.var ~ `HDI_rank`,data = geo.var_out)
-
-# for health and sanitation variables
-pairs.panels(health_sanitation, smooth = F, ellipses = F)
-boxplot(health_sanitation)
-boxplot(health_sanitation[,-3])
-
-pairs.panels(health_sanitation.var, smooth = F, ellipses = F)
-boxplot(health_sanitation.var)
-boxplot(health_sanitation.var[,-3])
-
-hs.var_out <- bind_cols(health_sanitation.var, outcome)
-par(mfrow=c(1,3),cex = 0.7)
-boxplot(hs.BasicSanitation.var ~ `HDI_rank`,data = hs.var_out)
-boxplot(hs.DrinkingWater.var ~ `HDI_rank`,data = hs.var_out)
-boxplot(hs.OpenDefecation.var ~ `HDI_rank`,data = hs.var_out)
-
-
-# par(mfrow=c(3,3),cex = 0.5)
-
+# summary(health_sanitation.var)
+describe(health_sanitation.var)
+pairs.panels(health_sanitation.var, ellipses = F, smooth = F)
+plot_correlation(health_sanitation.var, title = "Health and sanitation variation features correlations heatmap")
+plot_boxplot(bind_cols(health_sanitation.var, outcome[,2]), by='HDI_rank', title = "Health and sanitation variation features by HDI_rank", ncol = 2, nrow = 2)
+plot_qq(health_sanitation.var, title = "Health and sanitation variation features Q-Q plots", ncol = 2, nrow = 2)
 
 # mRMR feature selection:
 
@@ -175,12 +120,14 @@ mrmr <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr@filters$'1'
 colnames(data[,-1])[feature_index]
 
-# mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
-# feature_index <- mrmr@filters$'1'
-
+mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count =1, feature_count = 16)
+feature_index <- mrmr@filters$'1'
 selected_features <- colnames(data[,-1])[feature_index]
 selected_features
-data_selected <- data %>% select(selected_features)
+
+# ensemble would allow for union set of features. We'll stick to classic... 
+
+data_selected <- data %>% select(all_of(selected_features))
 describe(data_selected)
 pairs.panels(data_selected, ellipses = F, smooth = F)
 cor(data_selected)
@@ -191,10 +138,10 @@ boxplot(data_out$dem.MortalityInfant ~ data_out$HDI_rank, data = data_out)
 boxplot(data_out$dem.BirthRate.var ~ data_out$HDI_rank, data = data_out)
 boxplot(data_out$eco.CO2Emissions ~ data_out$HDI_rank, data = data_out)
 
-introduce(data_out)
+#introduce(data_out)
 create_report(data_out)
 plot_correlation(data_out[,1:16])
-plot_boxplot(data_out, by='HDI_rank', nrow = 4, ncol = 4, )
+plot_boxplot(data_out, by='HDI_rank', nrow = 4, ncol = 4)
 plot_qq(data_out[,1:16], nrow = 4, ncol = 4)
 plot_histogram(data_out)
 plot_density(data_out)
