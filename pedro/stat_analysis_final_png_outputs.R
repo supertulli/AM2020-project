@@ -3,6 +3,7 @@ library(dplyr)
 library(psych)
 library(tidyverse)
 library(DataExplorer)
+library(mRMRe)
 
 options(digits=3)
 
@@ -28,161 +29,191 @@ describe(outcome)
 economical <- data %>% select((starts_with('eco') & -ends_with('var'))) # economical instant values
 #summary(economical)
 describe(economical)
+png(filename = "figures/eco_pairs.png", width = 800, height = 600)
 pairs.panels(economical, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/eco_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(economical, title = "Economical features correlations heatmap")
+dev.off()
+png(filename = "figures/eco_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(economical,outcome[,2]), by='HDI_rank', title = "Economical features by HDI_rank")
+dev.off()
+png(filename = "figures/eco_box_a.png", width = 800, height = 600)
 plot_boxplot(bind_cols(economical[,-c(3:4,6:8)],outcome[,2]), by='HDI_rank')
+dev.off()
+png(filename = "figures/eco_box_b.png", width = 800, height = 600)
 plot_boxplot(bind_cols(economical[,c(3:4,6:8)],outcome[,2]), by='HDI_rank')
+dev.off()
+png(filename = "figures/eco_qq.png", width = 800, height = 600)
 plot_qq(economical, title = "Economical features Q-Q plots")
+dev.off()
 
 economical.var <- data %>% select((starts_with('eco') & ends_with('var'))) #economical variation values
 #summary(economical.var)
 describe(economical.var)
+png(filename = "figures/eco_var_pairs.png", width = 800, height = 600)
 pairs.panels(economical.var, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/eco_var_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(economical.var, title = "Economical variation features correlations heatmap")
+dev.off()
+png(filename = "figures/eco_var_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(economical.var,outcome[,2]), by='HDI_rank', title = "Economical variation features by HDI_rank")
+dev.off()
+png(filename = "figures/eco_var_qq.png", width = 800, height = 600)
 plot_qq(economical.var, title = "Economical variation features Q-Q plots")
+dev.off()
 
 ##### Demographic
 demographic <- data %>% select((starts_with('dem') & -ends_with('var'))) #demographic instant values
 #summary(demographic)
 describe(demographic)
+png(filename = "figures/dem_pairs.png", width = 800, height = 600)
 pairs.panels(demographic, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/dem_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(demographic, title = "Demographic features correlations heatmap")
+dev.off()
+png(filename = "figures/dem_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(demographic,outcome[,2]), by='HDI_rank', title = "Demographic features by HDI_rank")
+dev.off()
+png(filename = "figures/dem_qq.png", width = 800, height = 600)
 plot_qq(demographic, title = "Demographic features Q-Q plots")
+dev.off()
 
 demographic.var <- data %>% select((starts_with('dem') & ends_with('var'))) #demographic variation values
 #summary(demographic.var)
 describe(demographic.var)
+png(filename = "figures/dem_var_pairs.png", width = 800, height = 600)
 pairs.panels(demographic.var, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/dem_var_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(demographic.var, title = "Demographic variation features correlations heatmap")
+dev.off()
+png(filename = "figures/dem_var_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(demographic.var,outcome[,2]), by='HDI_rank', title = "Demographic variation features by HDI_rank")
+dev.off()
+png(filename = "figures/dem_var_qq.png", width = 800, height = 600)
 plot_qq(demographic.var, title = "Demographic features Q-Q plots", ncol = 4, nrow = 3)
-
+dev.off()
 ##### Education_Science
 education_science <- data %>% select((starts_with('sci') & -ends_with('var'))) #education and science instant values
 # summary(education_science)
 describe(education_science)
+png(filename = "figures/sci_pairs.png", width = 800, height = 600)
 pairs.panels(education_science, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/sci_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(education_science, title = "Education and Science features correlations heatmap")
+dev.off()
+png(filename = "figures/sci_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(education_science,outcome[,2]), by='HDI_rank', ncol = 3, nrow = 2 ,title = "Education and Science features by HDI_rank")
+dev.off()
+png(filename = "figures/sci_qq.png", width = 800, height = 600)
 plot_qq(education_science, title = "Education and Science features Q-Q plots")#, ncol = 4, nrow = 3)
+dev.off()
 
 education_science.var <- data %>% select((starts_with('sci') & ends_with('var'))) #education and science variation values
 #summary(education_science.var)
+png(filename = "figures/sci_var_pairs.png", width = 800, height = 600)
 pairs.panels(education_science.var, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/sci_var_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(education_science.var, title = "Education and Science variation features correlations heatmap")
+dev.off()
+png(filename = "figures/sci_var_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(education_science.var,outcome[,2]), by='HDI_rank', ncol = 3, nrow = 2 ,title = "Education and Science variation features by HDI_rank")
+dev.off()
+png(filename = "figures/sci_var_qq.png", width = 800, height = 600)
 plot_qq(education_science.var, title = "Education and Science variation features Q-Q plots")#, ncol = 4, nrow = 3)
+dev.off()
 
 ##### Geographic
 geographic <- data %>% select((starts_with('geo') & -ends_with('var'))) #geographic instant values
 #summary(geographic)
 describe(geographic)
+png(filename = "figures/geo_pairs.png", width = 800, height = 600)
 pairs.panels(geographic, ellipses = F, smooth = F)
-# correlation betwwen Urban and Rural population is -1 as to be expected
+dev.off()
+# correlation between Urban and Rural population is -1 as to be expected
+png(filename = "figures/geo_cor_heatmap.png", width = 800, height = 600)
 plot_correlation(geographic, title = "Geographic features correlations heatmap")
+dev.off()
+png(filename = "figures/geo_box.png", width = 800, height = 600)
 plot_boxplot(bind_cols(geographic, outcome[,2]), by='HDI_rank', title = "Geographic features by HDI_rank", ncol = 3, nrow = 2)
+dev.off()
+png(filename = "figures/geo_qq.png", width = 800, height = 600)
 plot_qq(geographic, title = "Geographic features Q-Q plots")#, ncol = 4, nrow = 3)
+dev.off()
 
 geographic.var <- data %>% select((starts_with('geo') & ends_with('var'))) #geographic variation values
 #summary(geographic.var)
-describe(geographic)
-pairs.panels(geographic, ellipses = F, smooth = F)
-# correlation betwwen Urban and Rural population is -1 as to be expected
-plot_correlation(geographic, title = "Geographic features correlations heatmap")
-plot_boxplot(bind_cols(geographic, outcome[,2]), by='HDI_rank', title = "Geographic features by HDI_rank", ncol = 3, nrow = 2)
-plot_qq(geographic, title = "Geographic features Q-Q plots")#, ncol = 4, nrow = 3)
+describe(geographic.var)
+png(filename = "figures/geo_var_pairs.png", width = 800, height = 600)
+pairs.panels(geographic.var, ellipses = F, smooth = F)
+dev.off()
+# correlation between Urban and Rural population variations is also -1 as to be expected
+png(filename = "figures/geo_var_cor_heatmap.png", width = 800, height = 600)
+plot_correlation(geographic.var, title = "Geographic variation features correlations heatmap")
+dev.off()
+png(filename = "figures/geo_var_box.png", width = 800, height = 600)
+plot_boxplot(bind_cols(geographic.var, outcome[,2]), by='HDI_rank', title = "Geographic variation features by HDI_rank", ncol = 1, nrow = 3)
+dev.off()
+png(filename = "figures/geo_var_qq.png", width = 800, height = 600)
+plot_qq(geographic.var, title = "Geographic variation features Q-Q plots")#, ncol = 4, nrow = 3)
+dev.off()
 
 ##### Health and Sanitation
 health_sanitation <-data %>% select((starts_with('hs') & -ends_with('var'))) #health and sanitation instant values
-summary(health_sanitation)
+#summary(health_sanitation)
+describe(health_sanitation)
+png(filename = "figures/hs_pairs.png", width = 800, height = 600)
+pairs.panels(health_sanitation, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/hs_cor_heatmap.png", width = 800, height = 600)
+plot_correlation(health_sanitation, title = "Health and sanitation features correlations heatmap")
+dev.off()
+png(filename = "figures/hs_box.png", width = 800, height = 600)
+plot_boxplot(bind_cols(health_sanitation, outcome[,2]), by='HDI_rank', title = "Health and sanitation features by HDI_rank", ncol = 2, nrow = 2)
+dev.off()
+png(filename = "figures/hs_qq.png", width = 800, height = 600)
+plot_qq(health_sanitation, title = "Health and sanitation features Q-Q plots", ncol = 2, nrow = 2)
+dev.off()
 
 health_sanitation.var <- data %>% select((starts_with('hs') & ends_with('var'))) #health and sanitation variation values
-summary(health_sanitation.var)
-
-# histograms and correlations per group
-
-# for economical instant values. GDP EXPORTS and IMPORTS are in a different scale so are grouped separately
-pairs.panels(economical[,-c(4,6,7)], smooth = FALSE, ellipses = FALSE)
-pairs.panels(economical[,c(4,6,7)], smooth = F, ellipses = F)
-
-boxplot(economical[,-c(4,6,7)])
-boxplot(economical[,c(4,6,7)], log="y") # make notice of log scale in y axes
-
-# for economical variation values. GDP EXPORTS and IMPORTS are in a different scale so are grouped separately
-pairs.panels(economical.var[,-c(4,6,7)], smooth = FALSE, ellipses = FALSE)
-pairs.panels(economical.var[,c(4,6,7)], smooth = F, ellipses = F)
-boxplot(economical.var[,-c(4,6,7)])
-boxplot(economical.var[,c(4,6,7)])
-
-# for demographic values variables
-pairs.panels(demographic, smooth = F, ellipses = F)
-boxplot(demographic)
-pairs.panels(demographic.var, smooth = F, ellipses = F)
-boxplot(demographic.var)
-
-# for education and science variables
-pairs.panels(education_science, smooth = F, ellipses = F)
-boxplot(education_science[,1])
-boxplot(education_science[,-1])
-pairs.panels(education_science.var, smooth = F, ellipses = F)
-boxplot(education_science.var)
-boxplot(education_science.var[,-1])
-
-# Some variables that are interesting to see by outcome:
-sci_out <- bind_cols(education_science, outcome)
-boxplot(sci.Internet ~ HDI_rank, data = sci_out)
-
-# for geographic variables
-pairs.panels(geographic, smooth = F, ellipses = F)
-boxplot(geographic[,-c(3,4)])
-boxplot(geographic[,c(3,4)])
-
-geo_out <- bind_cols(geographic, outcome)
-boxplot(geo.RuralPopGrowth ~ `HDI_rank`,data = geo_out)
-
-pairs.panels(geographic.var, smooth = F, ellipses = F)
-boxplot(geographic.var)
-
-geo.var_out <- bind_cols(geographic.var, outcome)
-boxplot(geo.ArableLand.var ~ `HDI_rank`,data = geo.var_out)
-
-# for health and sanitation variables
-pairs.panels(health_sanitation, smooth = F, ellipses = F)
-boxplot(health_sanitation)
-boxplot(health_sanitation[,-3])
-
-pairs.panels(health_sanitation.var, smooth = F, ellipses = F)
-boxplot(health_sanitation.var)
-boxplot(health_sanitation.var[,-3])
-
-hs.var_out <- bind_cols(health_sanitation.var, outcome)
-par(mfrow=c(1,3),cex = 0.7)
-boxplot(hs.BasicSanitation.var ~ `HDI_rank`,data = hs.var_out)
-boxplot(hs.DrinkingWater.var ~ `HDI_rank`,data = hs.var_out)
-boxplot(hs.OpenDefecation.var ~ `HDI_rank`,data = hs.var_out)
-
-
-# par(mfrow=c(3,3),cex = 0.5)
-
+# summary(health_sanitation.var)
+describe(health_sanitation.var)
+png(filename = "figures/hs_var_pairs.png", width = 800, height = 600)
+pairs.panels(health_sanitation.var, ellipses = F, smooth = F)
+dev.off()
+png(filename = "figures/hs_var_cor_heatmap.png", width = 800, height = 600)
+plot_correlation(health_sanitation.var, title = "Health and sanitation variation features correlations heatmap")
+dev.off()
+png(filename = "figures/hs_var_box.png", width = 800, height = 600)
+plot_boxplot(bind_cols(health_sanitation.var, outcome[,2]), by='HDI_rank', title = "Health and sanitation variation features by HDI_rank", ncol = 2, nrow = 2)
+dev.off()
+png(filename = "figures/hs_var_qq.png", width = 800, height = 600)
+plot_qq(health_sanitation.var, title = "Health and sanitation variation features Q-Q plots", ncol = 2, nrow = 2)
+dev.off()
 
 # mRMR feature selection:
 
 dd <- mRMR.data(data = data[,-1])
 mrmr <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr@filters$'1'
-colnames(data[,-1])[feature_index]
 
-# mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count = 5, feature_count = 16)
+# ensemble would allow for union set of features. We'll stick to classic... 
+# colnames(data[,-1])[feature_index]
+# mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count =1, feature_count = 16)
 # feature_index <- mrmr@filters$'1'
-
 selected_features <- colnames(data[,-1])[feature_index]
 selected_features
-data_selected <- data %>% select(selected_features)
+
+data_selected <- data %>% select(all_of(selected_features))
 describe(data_selected)
+png(filename = "figures/mRMR_16_pairs.png", width = 800, height = 600)
 pairs.panels(data_selected, ellipses = F, smooth = F)
+dev.off()
 cor(data_selected)
 
 data_out <- cbind(data_selected,outcome[,2])
@@ -191,13 +222,24 @@ boxplot(data_out$dem.MortalityInfant ~ data_out$HDI_rank, data = data_out)
 boxplot(data_out$dem.BirthRate.var ~ data_out$HDI_rank, data = data_out)
 boxplot(data_out$eco.CO2Emissions ~ data_out$HDI_rank, data = data_out)
 
-introduce(data_out)
-create_report(data_out)
-plot_correlation(data_out[,1:16])
-plot_boxplot(data_out, by='HDI_rank', nrow = 4, ncol = 4, )
-plot_qq(data_out[,1:16], nrow = 4, ncol = 4)
+#introduce(data_out)
+#create_report(data_out)
+png(filename = "figures/mRMR_16_cor_heatmap.png", width = 800, height = 600)
+plot_correlation(data_out[,1:16], title = "mRMR 16 features correlation heatmap")
+dev.off()
+png(filename = "figures/mRMR_16_box.png", width = 800, height = 600)
+plot_boxplot(data_out, by='HDI_rank', nrow = 4, ncol = 4)
+dev.off()
+png(filename = "figures/mRMR_16_qq.png", width = 800, height = 600)
+plot_qq(data_out[,1:16], title = "mRMR 16 features QQ-plot", nrow = 4, ncol = 4)
+dev.off()
+png(filename = "figures/mRMR_16_histogram.png", width = 800, height = 600)
 plot_histogram(data_out)
+dev.off()
+png(filename = "figures/mRMR_16_cor_heatmap.png", width = 800, height = 600)
 plot_density(data_out)
+
+png(filename = "figures/mRMR_16_cor_heatmap.png", width = 800, height = 600)
 plot_prcomp(data_out[,-17], variance_cap = 0.90)
 
 create_report(data_out)
