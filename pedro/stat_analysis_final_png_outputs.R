@@ -18,7 +18,8 @@ colnames(data)
 
 outcome <- WDI[,c(71,72)]
 colnames(outcome) <- c('HDI_var', 'HDI_rank')
-outcome$`HDI_rank` <- as.factor(outcome$`HDI_rank`)
+outcome$`HDI_rank` <- factor(outcome$`HDI_rank`, ordered = T, levels = c(0,1,2,3))
+head(outcome)
 summary(outcome)
 sapply(outcome[,1], sd)
 describe(outcome)
@@ -197,17 +198,22 @@ plot_qq(health_sanitation.var, title = "Health and sanitation variation features
 dev.off()
 
 # mRMR feature selection:
+rank <- factor(as.character(outcome[[2]]), ordered = TRUE, levels = c("0", "1", "2", "3"))
+mR_data <- bind_cols(rank, data[,-1])
+# mR_data[,1] <- as.factor(mR_data[,1])
+# mR_data[,1] <- ordered(mR_data[,1], levels = c(0, 1, 2, 3))
 
-dd <- mRMR.data(data = data[,-1])
-mrmr <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
-feature_index <- mrmr@filters$'1'
+head(mR_data)
+dd <- mRMR.data(data = mR_data[,-1], strata = rank)
+mrmr_selector <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
+feature_index <- mrmr_selector@filters$'1'
+selected_features <- colnames(data[,-1])[feature_index]
+selected_features # remove a NA feature selection...
 
 # ensemble would allow for union set of features. We'll stick to classic... 
 # colnames(data[,-1])[feature_index]
 # mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count =1, feature_count = 16)
 # feature_index <- mrmr@filters$'1'
-selected_features <- colnames(data[,-1])[feature_index]
-selected_features
 
 data_selected <- data %>% select(all_of(selected_features))
 describe(data_selected)
@@ -217,10 +223,11 @@ dev.off()
 cor(data_selected)
 
 data_out <- cbind(data_selected,outcome[,2])
-describeBy(data_out[,-17]~HDI_rank)
+
+describeBy(data_out[,-17] ~HDI_rank)
 boxplot(data_out$dem.MortalityInfant ~ data_out$HDI_rank, data = data_out)
 boxplot(data_out$dem.BirthRate.var ~ data_out$HDI_rank, data = data_out)
-boxplot(data_out$eco.CO2Emissions ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$hs.DrinkingWater ~ data_out$HDI_rank, data = data_out)
 
 #introduce(data_out)
 #create_report(data_out)
@@ -236,11 +243,12 @@ dev.off()
 png(filename = "figures/mRMR_16_histogram.png", width = 800, height = 600)
 plot_histogram(data_out)
 dev.off()
-png(filename = "figures/mRMR_16_cor_heatmap.png", width = 800, height = 600)
+png(filename = "figures/mRMR_16_density.png", width = 800, height = 600)
 plot_density(data_out)
-
-png(filename = "figures/mRMR_16_cor_heatmap.png", width = 800, height = 600)
+dev.off()
+png(filename = "figures/mRMR_16_prcomp.png", width = 800, height = 600)
 plot_prcomp(data_out[,-17], variance_cap = 0.90)
+dev.off()
 
 create_report(data_out)
 
@@ -269,3 +277,5 @@ cor(data_selected)
 data_out_full <- cbind(data_selected,outcome_full[,2])
 describeBy(data_out_full[,-17]~HDI_rank)
 boxplot(data_out_full$`Fixed telephone subscriptions - Delta`~data_out_full$HDI_rank, data = data_out_full)
+
+# a lot of selected features are demographic and highly correlated, not really meaningful or interesting...

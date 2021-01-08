@@ -27,9 +27,10 @@ grid()
 # Cumulative variance explained by each principal component
 cumulative_variance <- cumsum(variance_proportion) # compute the cumulative variance explained by each component
 # plot
-plot(cumulative_variance, ylab = "Cumulative Explained Variance", xlab = "Principal Component Index", main = "Cumulative variance explained by each PC")
-abline(0.8,0)
-grid()
+plot(cumulative_variance, 
+     ylab = "Cumulative Explained Variance", 
+     xlab = "Principal Component Index", 
+     main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
 
 # Choice of principal components
 # 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
@@ -44,10 +45,11 @@ if(cumulative_variance[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 8
 k_0.8} # show the value of k_0.8
 
 # 3. Find the elbow
-screeplot(WDI_indicators.pca,type = "lines", cex = 0.2, npcs = length(WDI_indicators.pca$sdev)/3)
-abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
-mean(WDI_indicators.pca$sdev^2)
-WDI_indicators.pca$sdev
+screeplot(WDI_indicators.pca,
+          type = "lines", 
+          cex = 0.2, 
+          npcs = length(WDI_indicators.pca$sdev)/3);abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
+
 k = min(k_1, k_0.8);k # choose the minimum value
 
 # Transform data
@@ -55,9 +57,11 @@ WDI_indicators_afterPCA <- WDI_indicators.pca$x%*% WDI_indicators.pca$rotation[,
 
 # understanding the loadings
 count_magnitude<-rep(0, length(WDI_indicators.pca$rotation[,1]))
+# each line's squares should sum 1, i.e. sum(WDI_indicators.pca$rotation[,j]^2 = 1 (||gamma_j|| = 1)
+# if all variables would contribute the same for the PC, than their squared weight would be 1/#variables
 for(i in 1:length(count_magnitude)){
   for(j in 1:k){
-    if(WDI_indicators.pca$rotation[i,j]^2 > sum(WDI_indicators.pca$rotation[,j]^2)/length(WDI_indicators.pca$rotation[,j])) count_magnitude[i] = count_magnitude[i]+1
+    if(WDI_indicators.pca$rotation[i,j]^2 > 1/length(WDI_indicators.pca$rotation[,j])) count_magnitude[i] = count_magnitude[i]+1
   }
 }
 barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2)
@@ -107,6 +111,15 @@ k = min(k_1, k_0.8);k} # choose the minimum value
 # Transform data
 WDI_indicators_noDeltas_afterPCA <- WDI_indicators_noDeltas.pca$x%*% WDI_indicators_noDeltas.pca$rotation[,1:k] #transform data according to the chosen k
 
+# understanding the loadings
+{count_magnitude_noDeltas<-rep(0, length(WDI_indicators_noDeltas.pca$rotation[,1]))
+for(i in 1:length(count_magnitude_noDeltas)){
+  for(j in 1:k){
+    if(WDI_indicators_noDeltas.pca$rotation[i,j]^2 > sum(WDI_indicators_noDeltas.pca$rotation[,j]^2)/length(WDI_indicators_noDeltas.pca$rotation[,j])) count_magnitude_noDeltas[i] = count_magnitude_noDeltas[i]+1
+  }
+}
+barplot(count_magnitude_noDeltas, names.arg=rownames(WDI_indicators_noDeltas.pca$rotation), las=2)}
+
 ###############################
 # Considering only the Deltas #
 ###############################
@@ -149,6 +162,14 @@ k = min(k_1, k_0.8); k}
 # Transform data
 WDI_indicators_Deltas_afterPCA <- WDI_indicators_Deltas.pca$x%*% WDI_indicators_Deltas.pca$rotation[,1:k] #transform data according to the chosen k
 
+# understanding the loadings
+{count_magnitude_Deltas<-rep(0, length(WDI_indicators_Deltas.pca$rotation[,1]))
+  for(i in 1:length(count_magnitude_Deltas)){
+    for(j in 1:k){
+      if(WDI_indicators_Deltas.pca$rotation[i,j]^2 > sum(WDI_indicators_Deltas.pca$rotation[,j]^2)/length(WDI_indicators_Deltas.pca$rotation[,j])) count_magnitude_Deltas[i] = count_magnitude_Deltas[i]+1
+    }
+  }
+  barplot(count_magnitude_Deltas, names.arg=rownames(WDI_indicators_Deltas.pca$rotation), las=2)}
 
 ##############
 # Robust PCA #
@@ -156,7 +177,7 @@ WDI_indicators_Deltas_afterPCA <- WDI_indicators_Deltas.pca$x%*% WDI_indicators_
 library("rrcov") # Pca's
 #WDI_indicators.pcaCov<-PcaCov(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) # singular covariance matrix
 
-# PCA Grid
+# PCA Grid - Projection Pursuit
 WDI_indicators.pcaGrid<- PcaGrid(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999)
 summary(WDI_indicators.pcaGrid)
 
@@ -236,3 +257,6 @@ plot(WDI_indicators.pcaROBPCA2,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag
 #install.packages("plm")
 library("plm")
 detect.lindep(WDI_indicators)
+
+install.packages("r-tensor")
+library("r-tensor")
