@@ -1,9 +1,27 @@
+library(ggplot2)
 library(readr) # read_csv
 # read and prepare data
 WDI <- read_csv("../data/WDI_shortnames.csv")
-WDI_indicators<-WDI[,c(2:(length(WDI)-2))] # the last two columns are the HDI-delta and categorical HDI and the first is the country/year pair
+#WDI_indicators<-WDI[,c(2:(length(WDI)-2))] # the last two columns are the HDI-delta and categorical HDI and the first is the country/year pair
 HDI<-WDI[,c(length(WDI)-1, length(WDI))] # target variables
 WDI_countryYear<-WDI[,1] # name of each sample (not relevant for the numerical analysis)
+
+WDI_indicators<-data.frame(WDI$dem.BirthRate, 
+                      WDI$dem.AdolescentFertRate.var, 
+                      WDI$dem.MortalityUnder5, 
+                      WDI$hs.GovHealthExpend,
+                      WDI$hs.BasicSanitation, 
+                      WDI$eco.AgeDependancyRate, 
+                      WDI$dem.DeathRate.var, 
+                      WDI$dem.LifeExpectancy, 
+                      WDI$sci.EduExpense, 
+                      WDI$eco.CO2Emissions, 
+                      WDI$dem.MortalityUnder5.var, 
+                      WDI$dem.PopGrowth, 
+                      WDI$dem.BirthRate.var, 
+                      WDI$dem.MortalityInfant)
+
+
 
 #################################
 # Principal Components Analysis #
@@ -48,12 +66,16 @@ k_0.8} # show the value of k_0.8
 screeplot(WDI_indicators.pca,
           type = "lines", 
           cex = 0.2, 
-          npcs = length(WDI_indicators.pca$sdev)/3);abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
+          npcs = length(WDI_indicators.pca$sdev));abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
 
 k = min(k_1, k_0.8);k # choose the minimum value
 
 # Transform data
-WDI_indicators_afterPCA <- WDI_indicators.pca$x%*% WDI_indicators.pca$rotation[,1:k] #transform data according to the chosen k
+loadings_pca<-WDI_indicators.pca$rotation[,1:k]
+WDI_indicators_afterPCA <- WDI_indicators.pca$x%*% loadings_pca #transform data according to the chosen k
+
+
+
 
 # understanding the loadings
 count_magnitude<-rep(0, length(WDI_indicators.pca$rotation[,1]))
@@ -66,110 +88,7 @@ for(i in 1:length(count_magnitude)){
 }
 barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2)
 
-###########################################
-# Dataset with and without "delta" values #
-###########################################
 
-# find the indices of the columns that correspond to a "delta" value
-delta_indx <- grepl('var', colnames(WDI))
-
-# Considering the dataset without the Deltas
-WDI_noDeltas <- WDI[!delta_indx] # consider only the columns that do not correspond to a "Delta" value
-WDI_indicators_noDeltas <- WDI_noDeltas[,c(2:(length(WDI_noDeltas)-2))] # remove the country/year pair and the HDI
-
-#PCA on the indicators with no deltas centering and scaling
-WDI_indicators_noDeltas.pca<-prcomp(WDI_indicators_noDeltas, center=TRUE, scale. = TRUE)
-summary(WDI_indicators_noDeltas.pca)
-
-# Proportion of variance explained by each principal component
-variance_proportion_noDeltas <- WDI_indicators_noDeltas.pca$sdev^2/sum(WDI_indicators_noDeltas.pca$sdev^2) # compute the proportion of variance explained by each component
-# plot
-plot(variance_proportion_noDeltas, ylab = "Proportion of variance", xlab = "Principal Component Index", main = "Proportion of variance explained by each PC")
-grid()
-
-# Cumulative variance explained by each principal component
-cumulative_variance_noDeltas <- cumsum(variance_proportion_noDeltas) # compute the cumulative variance explained by each component
-# plot
-plot(cumulative_variance_noDeltas, 
-     ylab = "Cumulative Explained Variance", 
-     xlab = "Principal Component Index", main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
-
-# Choice of principal components
-# 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
-{k_1 = 0
-for (value in WDI_indicators_noDeltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
-k_1 # show the value of k_1
-
-# 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
-k_0.8 = 0
-for (value in cumulative_variance_noDeltas){if (value < 0.8) k_0.8 = k_0.8+1}
-if(cumulative_variance_noDeltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
-k_0.8 # show the value of k_0.8
-
-k = min(k_1, k_0.8);k} # choose the minimum value
-
-# Transform data
-WDI_indicators_noDeltas_afterPCA <- WDI_indicators_noDeltas.pca$x%*% WDI_indicators_noDeltas.pca$rotation[,1:k] #transform data according to the chosen k
-
-# understanding the loadings
-{count_magnitude_noDeltas<-rep(0, length(WDI_indicators_noDeltas.pca$rotation[,1]))
-for(i in 1:length(count_magnitude_noDeltas)){
-  for(j in 1:k){
-    if(WDI_indicators_noDeltas.pca$rotation[i,j]^2 > sum(WDI_indicators_noDeltas.pca$rotation[,j]^2)/length(WDI_indicators_noDeltas.pca$rotation[,j])) count_magnitude_noDeltas[i] = count_magnitude_noDeltas[i]+1
-  }
-}
-barplot(count_magnitude_noDeltas, names.arg=rownames(WDI_indicators_noDeltas.pca$rotation), las=2)}
-
-###############################
-# Considering only the Deltas #
-###############################
-WDI_indicators_Deltas<- WDI[delta_indx] # consider only the columns that correspond to a "Delta"
-
-#PCA on the indicators with no deltas centering and scaling
-WDI_indicators_Deltas.pca<-prcomp(WDI_indicators_Deltas, center=TRUE, scale. = TRUE)
-summary(WDI_indicators_Deltas.pca)
-
-# Proportion of variance explained by each component
-variance_proportion_Deltas <- WDI_indicators_Deltas.pca$sdev^2/sum(WDI_indicators_Deltas.pca$sdev^2) #vector of the proportion of variance explained by each component
-# plot
-plot(variance_proportion_Deltas, 
-     ylab = "Proportion of variance", 
-     xlab = "Principal Component Index", 
-     main = "Proportion of variance explained by each PC");grid()
-
-# Cumulative variance explained by each component
-cumulative_variance_Deltas <- cumsum(variance_proportion_Deltas) #compute the cumulative variance
-# plot
-plot(cumulative_variance_Deltas, 
-     ylab = "Cumulative Explained Variance", 
-     xlab = "Principal Component Index", 
-     main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
-
-# Choice of principal components
-# 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
-{k_1 = 0; 
-for (value in WDI_indicators_Deltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
-k_1 # show the value of k_1
-
-# 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
-k_0.8 = 0;
-for (value in cumulative_variance_Deltas){if (value < 0.8) k_0.8 = k_0.8+1}
-if(cumulative_variance_Deltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
-k_0.8 # show the value of k_0.8
-# choose the minimum value
-k = min(k_1, k_0.8); k}
-
-# Transform data
-WDI_indicators_Deltas_afterPCA <- WDI_indicators_Deltas.pca$x%*% WDI_indicators_Deltas.pca$rotation[,1:k] #transform data according to the chosen k
-
-# understanding the loadings
-{count_magnitude_Deltas<-rep(0, length(WDI_indicators_Deltas.pca$rotation[,1]))
-  for(i in 1:length(count_magnitude_Deltas)){
-    for(j in 1:k){
-      if(WDI_indicators_Deltas.pca$rotation[i,j]^2 > sum(WDI_indicators_Deltas.pca$rotation[,j]^2)/length(WDI_indicators_Deltas.pca$rotation[,j])) count_magnitude_Deltas[i] = count_magnitude_Deltas[i]+1
-    }
-  }
-  barplot(count_magnitude_Deltas, names.arg=rownames(WDI_indicators_Deltas.pca$rotation), las=2)}
 
 ##############
 # Robust PCA #
@@ -217,31 +136,34 @@ plot(cumulative_variance_pcaGrid,
 
 
 # PCA Hubert
-WDI_indicators.pcaROBPCA <- PcaHubert(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) #kmax = 10 in PcaHubert
-summary(WDI_indicators.pcaROBPCA)
+WDI_indicators.ROBPCA <- PcaHubert(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) #kmax = 10 in PcaHubert
+summary(WDI_indicators.ROBPCA)
 
 # Proportion of variance explained by each component
-variance_proportion_pcaROBPCA <- WDI_indicators.pcaROBPCA$eigenvalues/sum(WDI_indicators.pcaROBPCA$eigenvalues) #vector of the proportion of variance explained by each component
+variance_proportion_ROBPCA <- WDI_indicators.ROBPCA$eigenvalues/sum(WDI_indicators.ROBPCA$eigenvalues) #vector of the proportion of variance explained by each component
 # plot
-plot(variance_proportion_pcaROBPCA, 
+plot(variance_proportion_ROBPCA, 
      ylab = "Proportion of variance", 
      xlab = "Principal Component Index", 
      main = "Proportion of variance explained by each PC");grid()
 
 # Cumulative variance explained by each component
-cumulative_variance_pcaROBPCA <- cumsum(variance_proportion_pcaROBPCA) #compute the cumulative variance
+cumulative_variance_ROBPCA <- cumsum(variance_proportion_ROBPCA) #compute the cumulative variance
 # plot
-plot(cumulative_variance_pcaROBPCA, 
+plot(cumulative_variance_ROBPCA, 
      ylab = "Cumulative Explained Variance", 
      xlab = "Principal Component Index", 
      main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
 
 
-screeplot(WDI_indicators.pcaROBPCA); abline(h=mean(WDI_indicators.pcaROBPCA$eigenvalues))
+screeplot(WDI_indicators.ROBPCA); abline(h=mean(WDI_indicators.ROBPCA$eigenvalues))
 
-plot(WDI_indicators.pcaROBPCA,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag)) # Mahalanobis Distance
-# WDI_indicators.pcaROBPCA$flag = 0 or 1 depending on whether the observation 
+plot(WDI_indicators.ROBPCA,pch=20,lwd=2,col=(2-WDI_indicators.ROBPCA$flag)) # Mahalanobis Distance
+# WDI_indicators.ROBPCA$flag = 0 or 1 depending on whether the observation 
 # col =  2 -> plot in red (if 1 -> plot in black)
+
+loadings_robpca<-matrix(c(WDI_indicators.ROBPCA$loadings[,1],WDI_indicators.ROBPCA$loadings[,2],WDI_indicators.ROBPCA$loadings[,3]), nrow=14, ncol=3)
+WDI_indicators_afterROBPCA<-wDI_indicators.pca$x%*%loadingsrobpca
 
 WDI_indicators.pcaROBPCA2 <- PcaHubert(WDI_indicators,scale=TRUE,k=2,crit.pca.distances = 0.999)
 plot(WDI_indicators.pcaROBPCA2,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag)) # Distance-Distance
@@ -258,5 +180,119 @@ plot(WDI_indicators.pcaROBPCA2,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag
 library("plm")
 detect.lindep(WDI_indicators)
 
-install.packages("r-tensor")
-library("r-tensor")
+library("rTensor")
+# prepare data
+WDI_eco <- WDI[grepl('eco', colnames(WDI))]; dim(WDI_eco)
+WDI_sci<-WDI[grepl('sci', colnames(WDI))]; dim(WDI_sci)
+WDI_geo<-WDI[grepl('geo', colnames(WDI))]; dim(WDI_geo)
+WDI_dem<-WDI[grepl('dem', colnames(WDI))]; dim(WDI_dem)
+WDI_hs<-WDI[grepl('hs', colnames(WDI))]; dim(WDI_hs)
+
+WDI_multi = array(c(WDI_hs, WDI_dem), dim = c(dim(WDI_hs)[1],dim(WDI_hs)[2],dim(WDI_dem)[2] ))
+
+###########################################
+# Dataset with and without "delta" values #
+###########################################
+
+# find the indices of the columns that correspond to a "delta" value
+delta_indx <- grepl('var', colnames(WDI_indicators))
+
+# Considering the dataset without the Deltas
+WDI_noDeltas <- WDI_indicators[!delta_indx] # consider only the columns that do not correspond to a "Delta" value
+WDI_indicators_noDeltas <- WDI_noDeltas[,c(2:(length(WDI_noDeltas)-2))] # remove the country/year pair and the HDI
+
+#PCA on the indicators with no deltas centering and scaling
+WDI_indicators_noDeltas.pca<-prcomp(WDI_indicators_noDeltas, center=TRUE, scale. = TRUE)
+summary(WDI_indicators_noDeltas.pca)
+
+# Proportion of variance explained by each principal component
+variance_proportion_noDeltas <- WDI_indicators_noDeltas.pca$sdev^2/sum(WDI_indicators_noDeltas.pca$sdev^2) # compute the proportion of variance explained by each component
+# plot
+plot(variance_proportion_noDeltas, 
+     ylab = "Proportion of variance", 
+     xlab = "Principal Component Index", 
+     main = "Proportion of variance explained by each PC");grid()
+
+# Cumulative variance explained by each principal component
+cumulative_variance_noDeltas <- cumsum(variance_proportion_noDeltas) # compute the cumulative variance explained by each component
+# plot
+plot(cumulative_variance_noDeltas, 
+     ylab = "Cumulative Explained Variance", 
+     xlab = "Principal Component Index", main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
+
+# Choice of principal components
+# 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
+{k_1 = 0
+  for (value in WDI_indicators_noDeltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
+  k_1 # show the value of k_1
+  
+  # 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
+  k_0.8 = 0
+  for (value in cumulative_variance_noDeltas){if (value < 0.8) k_0.8 = k_0.8+1}
+  if(cumulative_variance_noDeltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
+  k_0.8 # show the value of k_0.8
+  
+  k = min(k_1, k_0.8);k} # choose the minimum value
+
+# Transform data
+WDI_indicators_noDeltas_afterPCA <- WDI_indicators_noDeltas.pca$x%*% WDI_indicators_noDeltas.pca$rotation[,1:k] #transform data according to the chosen k
+
+# understanding the loadings
+{count_magnitude_noDeltas<-rep(0, length(WDI_indicators_noDeltas.pca$rotation[,1]))
+  for(i in 1:length(count_magnitude_noDeltas)){
+    for(j in 1:k){
+      if(WDI_indicators_noDeltas.pca$rotation[i,j]^2 > sum(WDI_indicators_noDeltas.pca$rotation[,j]^2)/length(WDI_indicators_noDeltas.pca$rotation[,j])) count_magnitude_noDeltas[i] = count_magnitude_noDeltas[i]+1
+    }
+  }
+  barplot(count_magnitude_noDeltas, names.arg=rownames(WDI_indicators_noDeltas.pca$rotation), las=2)}
+
+###############################
+# Considering only the Deltas #
+###############################
+WDI_indicators_Deltas<- WDI[delta_indx] # consider only the columns that correspond to a "Delta"
+
+#PCA on the indicators with no deltas centering and scaling
+WDI_indicators_Deltas.pca<-prcomp(WDI_indicators_Deltas, center=TRUE, scale. = TRUE)
+summary(WDI_indicators_Deltas.pca)
+
+# Proportion of variance explained by each component
+variance_proportion_Deltas <- WDI_indicators_Deltas.pca$sdev^2/sum(WDI_indicators_Deltas.pca$sdev^2) #vector of the proportion of variance explained by each component
+# plot
+plot(variance_proportion_Deltas, 
+     ylab = "Proportion of variance", 
+     xlab = "Principal Component Index", 
+     main = "Proportion of variance explained by each PC");grid()
+
+# Cumulative variance explained by each component
+cumulative_variance_Deltas <- cumsum(variance_proportion_Deltas) #compute the cumulative variance
+# plot
+plot(cumulative_variance_Deltas, 
+     ylab = "Cumulative Explained Variance", 
+     xlab = "Principal Component Index", 
+     main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
+
+# Choice of principal components
+# 1.Choose *k_1* such that lambda_i >= lambda^bar (which is 1, since we are working with standardized variables) for i = 1:k_1
+{k_1 = 0; 
+  for (value in WDI_indicators_Deltas.pca$sdev){ if (value^2 >=  1) k_1 = k_1+1}
+  k_1 # show the value of k_1
+  
+  # 2.Choose k_0.8 such that the first k_0.8 PC's explain 80% of the variance
+  k_0.8 = 0;
+  for (value in cumulative_variance_Deltas){if (value < 0.8) k_0.8 = k_0.8+1}
+  if(cumulative_variance_Deltas[k_0.8] < 0.8) k_0.8 = k_0.8+1 # if the threshold of the 80% has not yet been reached, add one more (PC_k_0.8 is the first component after reaching the 80% threshold)
+  k_0.8 # show the value of k_0.8
+  # choose the minimum value
+  k = min(k_1, k_0.8); k}
+
+# Transform data
+WDI_indicators_Deltas_afterPCA <- WDI_indicators_Deltas.pca$x%*% WDI_indicators_Deltas.pca$rotation[,1:k] #transform data according to the chosen k
+
+# understanding the loadings
+{count_magnitude_Deltas<-rep(0, length(WDI_indicators_Deltas.pca$rotation[,1]))
+  for(i in 1:length(count_magnitude_Deltas)){
+    for(j in 1:k){
+      if(WDI_indicators_Deltas.pca$rotation[i,j]^2 > sum(WDI_indicators_Deltas.pca$rotation[,j]^2)/length(WDI_indicators_Deltas.pca$rotation[,j])) count_magnitude_Deltas[i] = count_magnitude_Deltas[i]+1
+    }
+  }
+  barplot(count_magnitude_Deltas, names.arg=rownames(WDI_indicators_Deltas.pca$rotation), las=2)}
