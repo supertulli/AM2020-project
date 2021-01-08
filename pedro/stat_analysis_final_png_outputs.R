@@ -198,21 +198,24 @@ plot_qq(health_sanitation.var, title = "Health and sanitation variation features
 dev.off()
 
 # mRMR feature selection:
-# rank <- factor(as.character(outcome[[2]]), ordered = TRUE, levels = c("0","1","2","3"))
-mR_data <- bind_cols(WDI[,72], data[,-1])
+rank <- factor(as.character(outcome[[2]]), ordered = TRUE, levels = c("0", "1", "2", "3"))
+mR_data <- bind_cols(rank, data[,-1])
+# mR_data[,1] <- as.factor(mR_data[,1])
+# mR_data[,1] <- ordered(mR_data[,1], levels = c(0, 1, 2, 3))
+
 head(mR_data)
-dd <- mRMR.data(data = mR_data)
-mrmr_selector <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 17)
+dd <- mRMR.data(data = mR_data[,-1], strata = rank)
+mrmr_selector <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr_selector@filters$'1'
 selected_features <- colnames(data[,-1])[feature_index]
-selected_features[-9] # remove a NA feature selection...
+selected_features # remove a NA feature selection...
 
 # ensemble would allow for union set of features. We'll stick to classic... 
 # colnames(data[,-1])[feature_index]
 # mrmr <- mRMR.ensemble(data = dd, target_indices = c(1), solution_count =1, feature_count = 16)
 # feature_index <- mrmr@filters$'1'
 
-data_selected <- data %>% select(all_of(selected_features[-9]))
+data_selected <- data %>% select(all_of(selected_features))
 describe(data_selected)
 png(filename = "figures/mRMR_16_pairs.png", width = 800, height = 600)
 pairs.panels(data_selected, ellipses = F, smooth = F)
@@ -222,9 +225,9 @@ cor(data_selected)
 data_out <- cbind(data_selected,outcome[,2])
 
 describeBy(data_out[,-17] ~HDI_rank)
-boxplot(data_out$geo.RuralPop ~ data_out$HDI_rank, data = data_out)
-boxplot(data_out$hs.GovHealthExpend ~ data_out$HDI_rank, data = data_out)
-boxplot(data_out$eco.FoodProdIdx ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$dem.MortalityInfant ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$dem.BirthRate.var ~ data_out$HDI_rank, data = data_out)
+boxplot(data_out$hs.DrinkingWater ~ data_out$HDI_rank, data = data_out)
 
 #introduce(data_out)
 #create_report(data_out)
@@ -244,7 +247,7 @@ png(filename = "figures/mRMR_16_density.png", width = 800, height = 600)
 plot_density(data_out)
 dev.off()
 png(filename = "figures/mRMR_16_prcomp.png", width = 800, height = 600)
-plot_prcomp(data_out[,-17], variance_cap = 0.85)
+plot_prcomp(data_out[,-17], variance_cap = 0.90)
 dev.off()
 
 create_report(data_out)
