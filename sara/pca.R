@@ -1,4 +1,5 @@
 library(ggplot2)
+library(DataExplorer)
 library(readr) # read_csv
 # read and prepare data
 WDI <- read_csv("../data/WDI_shortnames.csv")
@@ -17,9 +18,9 @@ WDI_indicators<-data.frame(WDI$dem.BirthRate,
                       WDI$sci.EduExpense, 
                       WDI$eco.CO2Emissions, 
                       WDI$dem.MortalityUnder5.var, 
-                      WDI$dem.PopGrowth, 
-                      WDI$dem.BirthRate.var, 
-                      WDI$dem.MortalityInfant)
+                      WDI$dem.PopGrowth,
+                      WDI$hs.DrinkingWater,
+                      WDI$dem.BirthRate.var)
 
 
 
@@ -74,7 +75,7 @@ k = min(k_1, k_0.8);k # choose the minimum value
 loadings_pca<-WDI_indicators.pca$rotation[,1:k]
 WDI_indicators_afterPCA <- WDI_indicators.pca$x%*% loadings_pca #transform data according to the chosen k
 
-
+plot_prcomp(WDI_indicators.pca)
 
 
 # understanding the loadings
@@ -86,7 +87,7 @@ for(i in 1:length(count_magnitude)){
     if(WDI_indicators.pca$rotation[i,j]^2 > 1/length(WDI_indicators.pca$rotation[,j])) count_magnitude[i] = count_magnitude[i]+1
   }
 }
-barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2)
+barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2, horiz = TRUE)
 
 
 
