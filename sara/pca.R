@@ -1,6 +1,13 @@
 library(ggplot2)
-library(DataExplorer)
+library(DataExplorer) # plot_prcomp
+library(plot3D) # scatter3d
 library(readr) # read_csv
+
+# # install.packages("devtools")
+# library(devtools)
+# # install_github("vqv/ggbiplot")
+# library(ggbiplot)
+
 # read and prepare data
 WDI <- read_csv("../data/WDI_shortnames.csv")
 #WDI_indicators<-WDI[,c(2:(length(WDI)-2))] # the last two columns are the HDI-delta and categorical HDI and the first is the country/year pair
@@ -31,10 +38,6 @@ WDI_indicators<-data.frame(WDI$dem.BirthRate,
 WDI_indicators.pca<-prcomp(WDI_indicators, center=TRUE, scale. = TRUE) 
 summary(WDI_indicators.pca)
 
-# # install.packages("devtools")
-# library(devtools)
-# # install_github("vqv/ggbiplot")
-# library(ggbiplot)
 # ggbiplot(WDI_indicators.pca)
 
 # Proportion of variance explained by each principal component
@@ -136,6 +139,12 @@ plot(cumulative_variance_pcaGrid,
 # WDI_indicators_afterPcaGrid <- WDI_indicators.pcaGrid$scores[,1:k]
 
 
+WDI_indicators.MCDPCA<-PcaCov(WDI_indicators,  scale=TRUE,crit.pca.distances = 0.999)
+summary(WDI_indicators.MCDPCA)
+
+plot(WDI_indicators.MCDPCA,pch=20,lwd=2,col=(2-WDI_indicators.MCDPCA$flag))
+
+
 # PCA Hubert
 WDI_indicators.ROBPCA <- PcaHubert(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) #kmax = 10 in PcaHubert
 summary(WDI_indicators.ROBPCA)
@@ -163,8 +172,16 @@ plot(WDI_indicators.ROBPCA,pch=20,lwd=2,col=(2-WDI_indicators.ROBPCA$flag)) # Ma
 # WDI_indicators.ROBPCA$flag = 0 or 1 depending on whether the observation 
 # col =  2 -> plot in red (if 1 -> plot in black)
 
+# transform data
 loadings_robpca<-matrix(c(WDI_indicators.ROBPCA$loadings[,1],WDI_indicators.ROBPCA$loadings[,2],WDI_indicators.ROBPCA$loadings[,3]), nrow=14, ncol=3)
-WDI_indicators_afterROBPCA<-wDI_indicators.pca$x%*%loadingsrobpca
+WDI_indicators_afterROBPCA<-WDI_indicators.pca$x%*%loadings_robpca
+
+# scatter plot 3D
+x<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,1]
+y<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,2]
+z<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,3]
+scatter3D(x, y, z, colvar = NULL,pch = 19, cex = 0.5, col=(2-WDI_indicators.ROBPCA$flag))
+
 
 WDI_indicators.pcaROBPCA2 <- PcaHubert(WDI_indicators,scale=TRUE,k=2,crit.pca.distances = 0.999)
 plot(WDI_indicators.pcaROBPCA2,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag)) # Distance-Distance
