@@ -3,7 +3,7 @@ library(devtools) # close png
 
 #-----------------------------------------------------------------
 # import data
-data<-read.csv("andre/WDI_afterMRMR.csv", header = TRUE, sep = ",") #TODO: replace when files are at the right place
+data<-read.csv(".//WDI_afterMRMR.csv", header = TRUE, sep = ",") #TODO: replace when files are at the right place
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
 
@@ -57,7 +57,7 @@ dev.off()
 # save the transformed data
 data_afterPCA<-getScores(results_pcaClassic)[,1:k]
 
-# Robus PCA --------------------------------------------------
+# Robust PCA --------------------------------------------------
 # apply robust pca
 results_pcaRobust<-PcaHubert(data,scale=TRUE,crit.pca.distances = 0.999)
 summary(results_pcaRobust)
@@ -106,6 +106,7 @@ outcome <- read.csv("WDI_shortnames.csv", header = TRUE, sep=",")
 outcome = outcome[,72]
 #-------MRMR dataset------------------------------------------------------------------------
 #standardize data
+data.unscaled=data
 data=scale(data, center = TRUE, scale = TRUE)
 
 #------------ kmeans---------- 
@@ -279,12 +280,130 @@ k2 = Cluster_Medoids(data_afterROBPCA, clusters=2,distance_metric="manhattan")
 k2
 clusplot(data_afterROBPCA, k2$clusters, color=TRUE, shade=TRUE, labels=4, lines=0, main = 'ROBPCA Kmedoids, k=2')
 
-k3 = Cluster_Medoids(data_afterROBPCA, clusters=3,distance_metric="manhattan")
+k3 = Cluster_Medoids(data_afterROBPCA, clusters=3, distance_metric="manhattan")
 k3
 clusplot(data_afterROBPCA, k3$clusters, color=TRUE, labels=4, lines=0, main = 'ROBPCA Kmedoids, k=3', col.p = outcome)
 legend("bottomright", inset=.02, title="HDI class",
        c("Negative", "Low", "Medium", "High"), fill=c("yellow", "black", "red", "green"), cex=0.6)
 
 
+#--------------------------Classification----------------
+
+library(caret)
+library(e1071)
+library(tidyverse)
+library(MASS)
+library(klaR)
+library(yardstick)
+library(nnet)
+
+set.seed(42)
+
+#-------------data load--------------------------
+
+# data sets so far:
+head(data_afterROBPCA)
+head(data_afterPCA)
+
+# scaled data
+head(data)
+# unscaled data
+head(data.unscaled)
+
+# labels
+WDI <- read_csv(".//WDI_shortnames.csv")
+outcome <- WDI[,c(71,72)]
+colnames(outcome) <- c('HDI_var', 'HDI_rank')
+outcome$HDI_rank <- factor(outcome$`HDI_rank`, levels = c(0,1,2,3), 
+                           labels = c("Negative", "Low", "Medium", "High"))
+
+#--------------test train split------------------
+
+trainIndex=createDataPartition(outcome$HDI_rank, p=0.75)$Resample1
+y_train=outcome[trainIndex, ]
+y_test=outcome[-trainIndex, ]
+x_train=data[trainIndex, ]
+x_test=data[-trainIndex, ]
+
+#-----------Report metrics summary----------------
+
+showMetrics=function(pred,obs){
+  confmatrix<-confusionMatrix(data=pred,reference=obs);print(confmatrix)
+  accuracy=sum(diag(confmatrix$table))/sum(confmatrix$table)
+  message("Accuracy");print(round(accuracy,3))
+  bAccuracy=bal_accuracy_vec(truth=obs, estimate=pred,estimator="macro")
+  message("Balanced accuracy");print(round(bAccuracy,3))
+}
+
+#---------Naive Bayes (baseline)-------------------------------
+
+train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+model<- train(y=y_train$HDI_rank, x=x_train, trControl=train_control, method="nb")
+showMetrics(model$pred[,1],model$pred[,2])
+
+#------filter taking statistical analysis into account----------
+
+saOut = c("dem.MortalityInfant","dem.BirthRate.var",
+          "hs.DrinkingWater","dem.PopGrowth",
+          "dem.MortalityUnder5.var","eco.CO2Emissions",
+          "sci.EduExpense","dem.LifeExpectancy",
+          "dem.DeathRate.var","eco.AgeDependancyRate",
+          "hs.BasicSanitation","hs.GovHealthExpend",
+          "dem.AdolescentFertRate.var","dem.BirthRate")
+
+x_train <- x_train[,saOut]
+x_test <- x_test[,saOut]
+
+#---------Standardization (convenient for LDA)------------------
+
+preproc.param <- x_train %>% preProcess(method = c("center", "scale"))
+x_train.scaled <- preproc.param %>% predict(x_train)
+x_test.scaled <- preproc.param %>% predict(x_test)
+
+#-----------------------LDA-------------------------------------
+
+train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
+              prior = c(0.07,0.31,0.31,0.31), method="lda")
+showMetrics(model$pred[,1],model$pred[,2])
+
+#-----------------------QDA-------------------------------------
+
+train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
+              prior = c(0.07,0.31,0.31,0.31), method="qda")
+showMetrics(model$pred[,1],model$pred[,2])
+
+#-----------------------KNN-------------------------------------
+
+train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
+              method="knn", tuneLength = 20)
+model$results
+# The final value used for the model was k = 15.
+showMetrics(model$pred[,1],model$pred[,2])
+
+#--------------multinomial Logistic regression-------------------
+
+train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
+              method="multinom")
+model$results
+# The final value used for the model was k = 15.
+showMetrics(model$pred[,1],model$pred[,2])
+
+
+
+
+#-----------------------final-------------------------------------
+# LDA outperformed others
+
+LDAclassifier <- lda(x=x_train.scaled, grouping=y_train$HDI_rank, 
+                     prior = c(0.07,0.31,0.31,0.31), CV=FALSE)
+predictions <- predict(LDAclassifier, newdata=x_test.scaled)
+confmatrix<-confusionMatrix(predictions$class, y_test$HDI_rank)
+showMetrics(predictions$class, y_test$HDI_rank)
+lda.data <- cbind(x_train.scaled, predict(LDAclassifier)$x)
+ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = y_train$`HDI_rank`))
 
 
