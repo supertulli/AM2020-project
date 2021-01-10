@@ -428,7 +428,7 @@ data_outcome$`HDI_rank` <- factor(data_outcome$`HDI_rank`, levels = c(0,1,2,3), 
 
 
 #Dataset after processing
-WDI_afterMRMR <- read.csv("data/WDI_afterMRMR.csv")
+WDI_afterMRMR <- read.csv("WDI_afterMRMR.csv")
 
 data <- WDI_afterMRMR[, -c(1)]
 
@@ -436,7 +436,7 @@ data = scale(data)
 
 
 #Dataset after clustering
-WDI_CLUSTERING <- read.csv("data/WDI_CLUSTERING.csv")
+WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
 
 cluster_data <- WDI_CLUSTERING[, -c(1)]
 
