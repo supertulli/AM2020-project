@@ -47,14 +47,12 @@ bp_classic_loadings <- c(results_pcaClassic$loadings[,1], results_pcaClassic$loa
 bp_data_classic <- data.frame(bp_classic_names,variables,bp_classic_loadings)
 # plot
 png(filename = "figures/loadings_pcaClassic.png", width = 800, height = 600)
-ggplot(bp_data_classic, aes(fill=bp_classic_loadings, y=variables, x=bp_classic_loadings)) + 
+ggplot(bp_data_classic, aes(fill=bp_classic_loadings, y=variables, x=bp_classic_loadings, size=4)) + 
   geom_bar(position="stack", stat="identity") +
-  facet_wrap(~bp_classic_names) +
+  facet_wrap(~bp_classic_names, nrow = 2) +
   theme(legend.position="none") +
   xlab("Relative Importance")
 dev.off()
-
-
 
 # save the transformed data
 data_afterPCA<-getScores(results_pcaClassic)[,1:k]
