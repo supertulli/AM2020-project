@@ -208,7 +208,7 @@ dd <- mRMR.data(data = mR_data[,-1], strata = rank)
 mrmr_selector <- mRMR.classic(data = dd, target_indices = c(1), feature_count = 16)
 feature_index <- mrmr_selector@filters$'1'
 selected_features <- colnames(data[,-1])[feature_index]
-selected_features # remove a NA feature selection...
+selected_features
 
 # ensemble would allow for union set of features. We'll stick to classic... 
 # colnames(data[,-1])[feature_index]
@@ -216,11 +216,14 @@ selected_features # remove a NA feature selection...
 # feature_index <- mrmr@filters$'1'
 
 data_selected <- data %>% select(all_of(selected_features))
+
 describe(data_selected)
 png(filename = "figures/mRMR_16_pairs.png", width = 800, height = 600)
 pairs.panels(data_selected, ellipses = F, smooth = F)
 dev.off()
 cor(data_selected)
+
+data_selected <- bind_cols(WDI[,1],data_selected)
 
 data_out <- cbind(data_selected,outcome[,2])
 
@@ -252,10 +255,17 @@ dev.off()
 
 create_report(data_out)
 
+#pinpoint extreme values:
+data_selected[data_selected$sci.EduExpense>20,]
+data_selected[data_selected$dem.MortalityUnder5.var<(-50),]
+
+#output to csv file
+data_to_export <- data_out[, -which(names(data_out) %in% c("dem.Pop0to14","dem.BirthRate"))] 
+write.csv(data_to_export, file = "mRMR_reduced_data.csv")
 #######################################
 #the same with full data set
 
-WDI_full <- read_csv("/home/pedro/Documents/MECD/SEM01/AM/Proj/AM2020-project/data/WDI_full.csv")
+WDI_full <- read_csv("data/WDI_full.csv")
 head(WDI_full)
 
 outcome_full <- WDI_full[,c(369,370)]
@@ -264,9 +274,10 @@ outcome_full$`HDI_rank` <- as.factor(outcome_full$`HDI_rank`)
 
 # WDI_full[,c(369,370)]
 data_full <- WDI_full[,-c(369,370)]
-dd_full <- mRMR.data(data_full[,-1])
-mrmr <- mRMR.classic(data = dd_full, target_indices = c(1), feature_count = 16)
-feature_index <- mrmr@filters$'1'
+rank_full <- factor(as.character(outcome_full[[2]]), ordered = TRUE, levels = c("0", "1", "2", "3"))
+dd_full <- mRMR.data(data = data_full[,-1], strata = rank_full)
+mrmr_full <- mRMR.classic(data = dd_full, target_indices = c(1), feature_count = 16)
+feature_index <- mrmr_full@filters$'1'
 selected_features <- colnames(data_full[,-1])[feature_index]
 selected_features
 data_selected <- data_full %>% select(selected_features)
