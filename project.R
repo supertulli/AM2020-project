@@ -4,23 +4,25 @@ library(caret)
 
 #-----------------------------------------------------------------
 # import data
-data<-read.csv(".//WDI_afterMRMR.csv", header = TRUE, sep = ",") #TODO: replace when files are at the right place
+data<-read.csv(".//mRMR_reduced_data.csv", header = TRUE, sep = ",")
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
 
-# labels
-WDI <- read.csv(".//WDI.csv", header = TRUE, sep = ",")
-outcome <- WDI[,72]
+# save the oucome in classes
+outcome <- data[,16] 
 outcome <- factor(outcome, levels = c(0,1,2,3), 
-                           labels = c("Negative", "Low", "Medium", "High"))
+                  labels = c("Negative", "Low", "Medium", "High"))
+
+data = data[, -15:-16] # remove the outcome (both in classes and value)
 
 trainIndex = createDataPartition(outcome, p=0.8)$Resample1
 
 # Split data into train and test
 x_train=data[trainIndex, ]
 x_test=data[-trainIndex, ]
-y_train=outcome[trainIndex, ]
-y_test=outcome[-trainIndex, ]
+y_train=outcome[trainIndex]
+y_test=outcome[-trainIndex]
+
 
 
 #----------Principal Component Analysis----------------------------
@@ -109,6 +111,9 @@ dev.off()
 
 # transform data (only 3 PC's so consider the whole set)
 data_afterROBPCA<-predict(results_pcaRobust,data)
+
+write.csv(data_afterPCA, file = "data_afterPCA.csv")
+write.csv(data_afterROBPCA, file = "data_afterROBPCA.csv")
 
 #----------------------------------------------------------------
 #-----------Clustering-------------------------------------------
