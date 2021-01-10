@@ -8,18 +8,15 @@ data<-read.csv(".//WDI_afterMRMR.csv", header = TRUE, sep = ",") #TODO: replace 
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
 
-
 # labels
-WDI <- read_csv(".//WDI_shortnames.csv")
+WDI <- read.csv(".//WDI.csv", header = TRUE, sep = ",")
 outcome <- WDI[,72]
-colnames(outcome) <- c('HDI_var', 'HDI_rank')
-outcome$HDI_rank <- factor(outcome$`HDI_rank`, levels = c(0,1,2,3), 
+outcome <- factor(outcome, levels = c(0,1,2,3), 
                            labels = c("Negative", "Low", "Medium", "High"))
 
+trainIndex = createDataPartition(outcome, p=0.8)$Resample1
 
-trainIndex = createDataPartition(outcome$`HDI_rank`, p=0.8)$Resample1
-
-#Original Data
+# Split data into train and test
 x_train=data[trainIndex, ]
 x_test=data[-trainIndex, ]
 y_train=outcome[trainIndex, ]
@@ -33,7 +30,7 @@ library(DataExplorer)
 
 # Classical PCA --------------------------------------------------
 # apply classical pca
-results_pcaClassic<-PcaClassic(data, scale = TRUE)
+results_pcaClassic<-PcaClassic(x_train, scale = TRUE)
 summary(results_pcaClassic)
 
 # choice of k (number of principal components)
@@ -73,12 +70,13 @@ ggplot(bp_data_classic, aes(fill=bp_classic_loadings, y=variables, x=bp_classic_
   xlab("Relative Importance")
 dev.off()
 
-# save the transformed data
-data_afterPCA<-getScores(results_pcaClassic)[,1:k]
+# tranform both the training and test set
+data_afterPCA<-predict(results_pcaClassic, data)[,1:k] # using the full dataset 
+
 
 # Robust PCA --------------------------------------------------
 # apply robust pca
-results_pcaRobust<-PcaHubert(data,scale=TRUE,crit.pca.distances = 0.999)
+results_pcaRobust<-PcaHubert(x_train,scale=TRUE,crit.pca.distances = 0.999)
 summary(results_pcaRobust)
 
 # plot the eigenvalues and find the elbow
@@ -110,7 +108,7 @@ ggplot(bp_robust_data, aes(fill=bp_robust_loadings, y=variables, x=bp_robust_loa
 dev.off()
 
 # transform data (only 3 PC's so consider the whole set)
-data_afterROBPCA<-getScores(results_pcaRobust)
+data_afterROBPCA<-predict(results_pcaRobust,data)
 
 #----------------------------------------------------------------
 #-----------Clustering-------------------------------------------
