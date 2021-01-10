@@ -424,23 +424,6 @@ library(yardstick)
 
 #-------------data load--------------------------
 
-#Human Development Index outputs
-WDI <- read.csv("WDI.csv")
-
-data_outcome <- WDI[,c(71,72)]
-
-colnames(data_outcome) <- c('HDI_var', 'HDI_rank')
-
-data_outcome$`HDI_rank` <- factor(data_outcome$`HDI_rank`, levels = c(0,1,2,3), labels = c("Negative", "Low", "Medium", "High"))
-
-
-#Dataset after processing
-WDI_afterMRMR <- read.csv("WDI_afterMRMR.csv")
-
-data <- WDI_afterMRMR[, -c(1)]
-
-data = scale(data)
-
 
 #Dataset after clustering
 WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
@@ -448,8 +431,6 @@ WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
 cluster_data <- WDI_CLUSTERING[, -c(1)]
 
 c_data <- cluster_data[, -c(15)]
-
-c_data = scale(c_data)
 
 #Cluster output
 c_data_outcome <- cluster_data[,c(14,15)]
@@ -460,15 +441,6 @@ c_data_outcome$`HDI_rank` <- factor(c_data_outcome$`HDI_rank`, levels = c(1,2,3)
 
 
 #--------------test train split------------------
-
-trainIndex = createDataPartition(data_outcome$`HDI_rank`, p=0.8)$Resample1
-
-#Original Data
-x_train=data[trainIndex, ]
-x_test=data[-trainIndex, ]
-
-y_train=data_outcome[trainIndex, ]
-y_test=data_outcome[-trainIndex, ]
 
 #Cluster data
 x_cluster_train = c_data[trainIndex, ]
