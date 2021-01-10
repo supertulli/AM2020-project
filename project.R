@@ -87,7 +87,7 @@ ggplot(bp_robust_data, aes(fill=bp_robust_loadings, y=variables, x=bp_robust_loa
   geom_bar(position="dodge", stat="identity") +
   facet_wrap(~bp_robust_names) +
   theme(legend.position="none") +
-  xlab("")
+  xlab("Relative Importance")
 dev.off()
 
 # transform data (only 3 PC's so consider the whole set)
