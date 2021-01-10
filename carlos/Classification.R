@@ -48,14 +48,22 @@ colnames(data_outcome) <- c('HDI_var', 'HDI_rank')
 data_outcome$`HDI_rank` <- factor(data_outcome$`HDI_rank`, levels = c(0,1,2,3), labels = c("Negative", "Low", "Medium", "High"))
 
 
-data <- read.csv("data/WDI_afterMRMR.csv")
+WDI_afterMRMR <- read.csv("data/WDI_afterMRMR.csv")
+
+data <- WDI_afterMRMR[, -c(1)]
+
+data = scale(data)
 
 
-cluster_data <- read.csv("data/WDI_CLUSTERING.csv")
+WDI_CLUSTERING <- read.csv("data/WDI_CLUSTERING.csv")
 
-c_data <- cluster_data[, -c(16)]
+cluster_data <- WDI_CLUSTERING[, -c(1)]
 
-c_data_outcome <- cluster_data[,c(15,16)]
+c_data <- cluster_data[, -c(15)]
+
+c_data = scale(c_data)
+
+c_data_outcome <- cluster_data[,c(14,15)]
 
 colnames(c_data_outcome) <- c('HDI_var', 'HDI_rank')
 

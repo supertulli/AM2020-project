@@ -3,10 +3,11 @@ library(DataExplorer) # plot_prcomp
 library(plot3D) # scatter3d
 library(readr) # read_csv
 
-# # install.packages("devtools")
-# library(devtools)
-# # install_github("vqv/ggbiplot")
-# library(ggbiplot)
+#install.packages("devtools")
+library(devtools)
+#install_github("vqv/ggbiplot")
+library(ggbiplot)
+library(rrcov) # Pca's
 
 # read and prepare data
 WDI <- read_csv("../data/WDI_shortnames.csv")
@@ -38,7 +39,7 @@ WDI_indicators<-data.frame(WDI$dem.BirthRate,
 WDI_indicators.pca<-prcomp(WDI_indicators, center=TRUE, scale. = TRUE) 
 summary(WDI_indicators.pca)
 
-# ggbiplot(WDI_indicators.pca)
+ggbiplot(WDI_indicators.pca)
 
 # Proportion of variance explained by each principal component
 variance_proportion <- WDI_indicators.pca$sdev^2/sum(WDI_indicators.pca$sdev^2) # compute the proportion of variance explained by each component
@@ -70,7 +71,10 @@ k_0.8} # show the value of k_0.8
 screeplot(WDI_indicators.pca,
           type = "lines", 
           cex = 0.2, 
-          npcs = length(WDI_indicators.pca$sdev));abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
+          npcs = length(WDI_indicators.pca$sdev),
+          #ylab = "Eigenvalues", 
+          #xlab = "Principal Component Index", 
+          main = "Eigenvalue related to each PC");abline(h = mean(WDI_indicators.pca$sdev^2), col = 3)
 
 k = min(k_1, k_0.8);k # choose the minimum value
 
@@ -97,7 +101,7 @@ barplot(count_magnitude, names.arg=rownames(WDI_indicators.pca$rotation), las=2,
 ##############
 # Robust PCA #
 ##############
-library("rrcov") # Pca's
+
 #WDI_indicators.pcaCov<-PcaCov(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) # singular covariance matrix
 
 # PCA Grid - Projection Pursuit
@@ -149,40 +153,66 @@ plot(WDI_indicators.MCDPCA,pch=20,lwd=2,col=(2-WDI_indicators.MCDPCA$flag))
 WDI_indicators.ROBPCA <- PcaHubert(WDI_indicators,scale=TRUE,crit.pca.distances = 0.999) #kmax = 10 in PcaHubert
 summary(WDI_indicators.ROBPCA)
 
+WDI_indicators
 # Proportion of variance explained by each component
 variance_proportion_ROBPCA <- WDI_indicators.ROBPCA$eigenvalues/sum(WDI_indicators.ROBPCA$eigenvalues) #vector of the proportion of variance explained by each component
 # plot
+png(filename = "figures/varProp_ROBPCA.png", width = 800, height = 600)
 plot(variance_proportion_ROBPCA, 
      ylab = "Proportion of variance", 
      xlab = "Principal Component Index", 
-     main = "Proportion of variance explained by each PC");grid()
+     main = "Proportion of variance explained by each PC", 
+     type = "b");grid()
+dev.off()
 
 # Cumulative variance explained by each component
 cumulative_variance_ROBPCA <- cumsum(variance_proportion_ROBPCA) #compute the cumulative variance
 # plot
-plot(cumulative_variance_ROBPCA, 
+png(filename = "figures/cumVar_ROBPCA.png", width = 800, height = 600)
+barplot(cumulative_variance_ROBPCA, 
      ylab = "Cumulative Explained Variance", 
      xlab = "Principal Component Index", 
-     main = "Cumulative variance explained by each PC");abline(0.8,0);grid()
+     main = "Cumulative variance explained by each PC",
+     names.arg=rownames(cumulative_variance_ROBPCA));abline(0.8,0);grid()
+dev.off()
 
-
-screeplot(WDI_indicators.ROBPCA); abline(h=mean(WDI_indicators.ROBPCA$eigenvalues))
-
-plot(WDI_indicators.ROBPCA,pch=20,lwd=2,col=(2-WDI_indicators.ROBPCA$flag)) # Mahalanobis Distance
+png(filename = "figures/outliers_ROBPCA.png", width = 800, height = 600)
+plot(WDI_indicators.ROBPCA,pch=20,lwd=2,col=(2-WDI_indicators.ROBPCA$flag))
 # WDI_indicators.ROBPCA$flag = 0 or 1 depending on whether the observation 
 # col =  2 -> plot in red (if 1 -> plot in black)
+dev.off()
 
+
+
+getScale(WDI_indicators.ROBPCA)
+getCenter(WDI_indicators.ROBPCA )
+load.ROBPCA<-getLoadings(WDI_indicators.ROBPCA )
+eval.ROBPCA<-getEigenvalues(WDI_indicators.ROBPCA )
+getSdev(WDI_indicators.ROBPCA )
+getPrcomp (WDI_indicators.ROBPCA )
+predict(WDI_indicators.ROBPCA)
+plot(getScores(WDI_indicators.ROBPCA),col=(2-WDI_indicators.ROBPCA$flag),pch=20,lwd=2)
+
+
+biplot(getPrcomp(WDI_indicators.ROBPCA))
 # transform data
 loadings_robpca<-matrix(c(WDI_indicators.ROBPCA$loadings[,1],WDI_indicators.ROBPCA$loadings[,2],WDI_indicators.ROBPCA$loadings[,3]), nrow=14, ncol=3)
 WDI_indicators_afterROBPCA<-WDI_indicators.pca$x%*%loadings_robpca
 
 # scatter plot 3D
 x<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,1]
-y<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,2]
-z<-WDI_ROBPC1<-WDI_indicators_afterROBPCA[,3]
-scatter3D(x, y, z, colvar = NULL,pch = 19, cex = 0.5, col=(2-WDI_indicators.ROBPCA$flag))
+y<-WDI_ROBPC2<-WDI_indicators_afterROBPCA[,2]
+z<-WDI_ROBPC3<-WDI_indicators_afterROBPCA[,3]
+install.packages("scatterplot3d")
+library("scatterplot3d")
+scatterplot3d(WDI_indicators_afterROBPCA[,1:3], angle = 55, cex = 0.5,pch = 19, color = (2-WDI_indicators.ROBPCA$flag)) # ,colvar = NULL,pch = 19, cex = 0.5, phi = 0, theta = 40, col=(2-WDI_indicators.ROBPCA$flag))
+scatter3D(x, y, z, pch = 19, colvar = NULL, col=(2-WDI_indicators.ROBPCA$flag), legend = c("PC1", "PC2", "PC3"))
 
+outliers_ROBPCA<-WDI_countryYear[!WDI_indicators.ROBPCA$flag, ]
 
+dim = c(14, 14)
+tnsr<-as.tensor(array(cbind(WDI_indicators, WDI_indicators), dim = c(14, 14)))
+tnsr
 WDI_indicators.pcaROBPCA2 <- PcaHubert(WDI_indicators,scale=TRUE,k=2,crit.pca.distances = 0.999)
 plot(WDI_indicators.pcaROBPCA2,pch=20,lwd=2,col=(2-WDI_indicators.pcaROBPCA$flag)) # Distance-Distance
 
@@ -206,7 +236,11 @@ WDI_geo<-WDI[grepl('geo', colnames(WDI))]; dim(WDI_geo)
 WDI_dem<-WDI[grepl('dem', colnames(WDI))]; dim(WDI_dem)
 WDI_hs<-WDI[grepl('hs', colnames(WDI))]; dim(WDI_hs)
 
-WDI_multi = array(c(WDI_hs, WDI_dem), dim = c(dim(WDI_hs)[1],dim(WDI_hs)[2],dim(WDI_dem)[2] ))
+WDI_multi = as.tensor(array(c(WDI_eco, WDI_sci, WDI_geo, WDI_dem,WDI_hs), dim = c(dim(WDI_eco)[2], dim(WDI_sci)[2], dim(WDI_geo)[2], dim(WDI_dem)[2],dim(WDI_hs)[2] )))
+
+ranks_vector<-c(dim(WDI_eco)[2], dim(WDI_sci)[2], dim(WDI_geo)[2], dim(WDI_dem)[2],dim(WDI_hs)[2])
+
+WDI_multi.pca<-mpca(WDI_multi, ranks = ranks_vector , max_iter = 25, tol = 1e-05)
 
 ###########################################
 # Dataset with and without "delta" values #
