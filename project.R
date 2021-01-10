@@ -40,13 +40,21 @@ screeplot(results_pcaClassic,
 dev.off()
 
 # loadings visual analysis
-png(filename = "figures/eigenvectors_pcaClassic.png", width = 800, height = 600)
-plot_prcomp(data, nrow = 2, ncol= 2) 
-# Note: Even though this plot is computing again a classical pca, 
-# it is considering a 0.8 cap for the explained variance by default to decide the number of principal components, 
-# and, in this case, it ends up being the same as the chosen one (the first criterion results in k = 4). 
-# The signs might be flipped, but the magnitude of each variable at each component is the same.
+bp_classic_names <- c(rep("PC1" , dim(results_pcaClassic$loadings)[1]) , rep("PC2" , dim(results_pcaClassic$loadings)[1]) , 
+                rep("PC3" , dim(results_pcaClassic$loadings)[1]), rep("PC4" , dim(results_pcaClassic$loadings)[1]))
+variables <- rep(rownames(results_pcaClassic$loadings),4)
+bp_classic_loadings <- c(results_pcaClassic$loadings[,1], results_pcaClassic$loadings[,2], results_pcaClassic$loadings[,3], results_pcaClassic$loadings[,4])
+bp_data_classic <- data.frame(bp_classic_names,variables,bp_classic_loadings)
+# plot
+png(filename = "figures/loadings_pcaClassic.png", width = 800, height = 600)
+ggplot(bp_data_classic, aes(fill=bp_classic_loadings, y=variables, x=bp_classic_loadings)) + 
+  geom_bar(position="stack", stat="identity") +
+  facet_wrap(~bp_classic_names) +
+  theme(legend.position="none") +
+  xlab("Relative Importance")
 dev.off()
+
+
 
 # save the transformed data
 data_afterPCA<-getScores(results_pcaClassic)[,1:k]
@@ -71,15 +79,15 @@ plot(results_pcaRobust,pch=20,lwd=2,col=(2-results_pcaRobust$flag))
 dev.off()
 
 # loadings visual analysis
-pc_barplot <- c(rep("PC1" , dim(results_pcaRobust$loadings)[1]) , rep("PC2" , dim(results_pcaRobust$loadings)[1]) , rep("PC3" , dim(results_pcaRobust$loadings)[1]))
+bp_robust_names <- c(rep("PC1" , dim(results_pcaRobust$loadings)[1]) , rep("PC2" , dim(results_pcaRobust$loadings)[1]) , rep("PC3" , dim(results_pcaRobust$loadings)[1]))
 variables <- rep(rownames(results_pcaRobust$loadings),3)
-loadings <- c(results_pcaRobust$loadings[,1], results_pcaRobust$loadings[,2], results_pcaRobust$loadings[,3])
-data_barplot <- data.frame(pc_barplot,variables,value_barplot)
+bp_robust_loadings <- c(results_pcaRobust$loadings[,1], results_pcaRobust$loadings[,2], results_pcaRobust$loadings[,3])
+bp_robust_data <- data.frame(bp_robust_names,variables,bp_robust_loadings)
 # plot
 png(filename = "figures/loadings_pcaRobust.png", width = 800, height = 600)
-ggplot(data_barplot, aes(fill=value_barplot, y=variables, x=value_barplot)) + 
+ggplot(bp_robust_data, aes(fill=bp_robust_loadings, y=variables, x=bp_robust_loadings)) + 
   geom_bar(position="dodge", stat="identity") +
-  facet_wrap(~pc_barplot) +
+  facet_wrap(~bp_robust_names) +
   theme(legend.position="none") +
   xlab("")
 dev.off()
