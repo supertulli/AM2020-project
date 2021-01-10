@@ -1,11 +1,30 @@
 # generic libraries
 library(devtools) # close png
+library(caret)
 
 #-----------------------------------------------------------------
 # import data
 data<-read.csv(".//WDI_afterMRMR.csv", header = TRUE, sep = ",") #TODO: replace when files are at the right place
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
+
+
+# labels
+WDI <- read_csv(".//WDI_shortnames.csv")
+outcome <- WDI[,72]
+colnames(outcome) <- c('HDI_var', 'HDI_rank')
+outcome$HDI_rank <- factor(outcome$`HDI_rank`, levels = c(0,1,2,3), 
+                           labels = c("Negative", "Low", "Medium", "High"))
+
+
+trainIndex = createDataPartition(outcome$`HDI_rank`, p=0.8)$Resample1
+
+#Original Data
+x_train=data[trainIndex, ]
+x_test=data[-trainIndex, ]
+y_train=outcome[trainIndex, ]
+y_test=outcome[-trainIndex, ]
+
 
 #----------Principal Component Analysis----------------------------
 #libaries
@@ -102,8 +121,6 @@ library(purrr)
 library(ClusterR)
 library(tidyverse)
 
-outcome <- read.csv("WDI_shortnames.csv", header = TRUE, sep=",")
-outcome = outcome[,72]
 #-------MRMR dataset------------------------------------------------------------------------
 #standardize data
 data.unscaled=data
@@ -289,7 +306,6 @@ legend("bottomright", inset=.02, title="HDI class",
 
 #--------------------------Classification----------------
 
-library(caret)
 library(e1071)
 library(tidyverse)
 library(MASS)
@@ -310,20 +326,13 @@ head(data)
 # unscaled data
 head(data.unscaled)
 
-# labels
-WDI <- read_csv(".//WDI_shortnames.csv")
-outcome <- WDI[,c(71,72)]
-colnames(outcome) <- c('HDI_var', 'HDI_rank')
-outcome$HDI_rank <- factor(outcome$`HDI_rank`, levels = c(0,1,2,3), 
-                           labels = c("Negative", "Low", "Medium", "High"))
-
 #--------------test train split------------------
 
-trainIndex=createDataPartition(outcome$HDI_rank, p=0.75)$Resample1
-y_train=outcome[trainIndex, ]
-y_test=outcome[-trainIndex, ]
-x_train=data[trainIndex, ]
-x_test=data[-trainIndex, ]
+x_ROBPCA_train=data_afterROBPCA[trainIndex, ]
+x_ROBPCA_test=data_afterROBPCA[-trainIndex, ]
+x_PCA_train=data_afterPCA[trainIndex, ]
+x_PCA_test=data_afterPCA[-trainIndex, ]
+
 
 #-----------Report metrics summary----------------
 
@@ -405,6 +414,11 @@ confmatrix<-confusionMatrix(predictions$class, y_test$HDI_rank)
 showMetrics(predictions$class, y_test$HDI_rank)
 lda.data <- cbind(x_train.scaled, predict(LDAclassifier)$x)
 ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = y_train$`HDI_rank`))
+
+
+
+
+
 
 
 #--------------Classification after Clustering----------------
@@ -498,6 +512,11 @@ showMetrics=function(model, x, y){
   
   cat("\n\n")
   print(data.frame(precision, recall, f1))
+}
+
+
+runClassification=function(x_train, y_train){
+
 }
 
 #--------Random Forest--------
