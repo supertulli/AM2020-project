@@ -70,6 +70,23 @@ png(filename = "figures/outliers_pcaRobust.png", width = 800, height = 600)
 plot(results_pcaRobust,pch=20,lwd=2,col=(2-results_pcaRobust$flag))
 dev.off()
 
+# loadings visual analysis
+pc_barplot <- c(rep("PC1" , dim(results_pcaRobust$loadings)[1]) , rep("PC2" , dim(results_pcaRobust$loadings)[1]) , rep("PC3" , dim(results_pcaRobust$loadings)[1]))
+variables <- rep(rownames(results_pcaRobust$loadings),3)
+loadings <- c(results_pcaRobust$loadings[,1], results_pcaRobust$loadings[,2], results_pcaRobust$loadings[,3])
+data_barplot <- data.frame(pc_barplot,variables,value_barplot)
+# plot
+png(filename = "figures/loadings_pcaRobust.png", width = 800, height = 600)
+ggplot(data_barplot, aes(fill=value_barplot, y=variables, x=value_barplot)) + 
+  geom_bar(position="dodge", stat="identity") +
+  facet_wrap(~pc_barplot) +
+  theme(legend.position="none") +
+  xlab("")
+dev.off()
+
 # transform data (only 3 PC's so consider the whole set)
 data_afterROBPCA<-getScores(results_pcaRobust)
 #----------------------------------------------------------------
+
+
+
