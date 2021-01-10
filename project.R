@@ -414,11 +414,6 @@ lda.data <- cbind(x_train.scaled, predict(LDAclassifier)$x)
 ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = y_train$`HDI_rank`))
 
 
-
-
-
-
-
 #--------------Classification after Clustering----------------
 
 library(randomForest)
@@ -430,7 +425,7 @@ library(yardstick)
 #-------------data load--------------------------
 
 #Human Development Index outputs
-WDI <- read.csv("data/WDI.csv")
+WDI <- read.csv("WDI.csv")
 
 data_outcome <- WDI[,c(71,72)]
 
@@ -513,99 +508,105 @@ showMetrics=function(model, x, y){
 }
 
 
-runClassification=function(x_train, y_train){
+data <- list(x_train, x_test, y_train, y_test, x_cluster_train, x_cluster_test, y_cluster_train, y_cluster_test)
 
+
+runClassification=function(data){
+  
+  #Dataset Data
+  x_train=data.frame(data[[1]])
+  x_test=data.frame(data[[2]])
+  
+  y_train=data.frame(data[[3]])
+  y_test=data.frame(data[[4]])
+  
+  #Dataset with clusters
+  x_cluster_train = data.frame(data[[5]])
+  x_cluster_test = data.frame(data[[6]])
+  
+  y_cluster_train = data.frame(data[[7]])
+  y_cluster_test = data.frame(data[[8]])
+  
+  #--------Random Forest--------
+  
+  #--------classification using cluster output--------
+  
+  #verify if random forest is adequate with cross-validation
+  
+  Fit.RF <- rfcv(x_cluster_train,
+                 y_cluster_train$HDI_rank, 
+                 ntrees=200,
+                 cv.fold=5) 
+  
+  with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
+  
+  # error close to 0 -> optimal algorithm
+  
+  
+  model<-randomForest(y_cluster_train$HDI_rank ~., 
+                      data=x_cluster_train,
+                      ntrees=200)
+  
+  # verify for test set
+  rf.pred=predict(model, x_cluster_test, type="class")
+  predMatrix = with(x_cluster_test, table(rf.pred, y_cluster_test$HDI_rank))
+  
+  showMetrics(rf.pred, x_cluster_test, y_cluster_test)
+  importance(model)
+  
+  
+  #----------classification using wdi data--------------------------
+  
+  #verify if random forest is adequate with cross-validation
+  
+  Fit.RF <- rfcv(x_train,
+                 y_train$HDI_rank, 
+                 ntrees=200,
+                 cv.fold=5) 
+  
+  with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
+  
+  # error does not tend to 0 (tends to 0.50), 
+  # probably not an optimal algorithm or dataset not otimized
+  
+  
+  model<-randomForest(y_train$HDI_rank ~., 
+                      data=x_train,
+                      ntrees=200)
+  
+  # verify for test set
+  rf.pred=predict(model, x_test, type="class")
+  predMatrix = with(x_test, table(rf.pred, y_test$HDI_rank))
+  
+  showMetrics(rf.pred, x_test, y_test)
+  importance(model)
+  
+  
+  #----------Naive Bayes----------
+  
+  #--------classification using cluster output--------
+  
+  NBclassifier <- train(x_cluster_train, 
+                        y_cluster_train$HDI_rank, 
+                        method = "nb", 
+                        trControl = trainControl(method = "cv", number = 5))
+  
+  pred <- predict(NBclassifier, newdata=x_cluster_test, type="raw")
+  
+  showMetrics(pred, x_cluster_test, y_cluster_test)
+  
+  
+  
+  #----------classification using wdi data--------------------------
+  
+  NBclassifier <- train(x_train, 
+                        y_train$HDI_rank, 
+                        method = "nb", 
+                        trControl = trainControl(method = "cv", number = 5))
+  
+  pred <- predict(NBclassifier, newdata=x_test, type="raw")
+  
+  showMetrics(pred, x_test, y_test)
 }
 
-#--------Random Forest--------
-
-#--------classification using cluster output--------
-
-#verify if random forest is adequate with cross-validation
-
-Fit.RF <- rfcv(x_cluster_train,
-               y_cluster_train$HDI_rank, 
-               ntrees=200,
-               cv.fold=5) 
-
-with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
-
-# error close to 0 -> optimal algorithm
-
-
-model<-randomForest(y_cluster_train$HDI_rank ~., 
-                    data=x_cluster_train,
-                    ntrees=200)
-
-
-# verify for training set -> expecting accuracy of 100%
-rf.pred.training=predict(model,x_cluster_train,type="class")
-
-showMetrics(rf.pred.training, x_cluster_train, y_cluster_train)
-
-# verify for test set
-rf.pred=predict(model, x_cluster_test, type="class")
-predMatrix = with(x_cluster_test, table(rf.pred, y_cluster_test$HDI_rank))
-
-showMetrics(rf.pred, x_cluster_test, y_cluster_test)
-importance(model)
-
-
-#----------classification using wdi data--------------------------
-
-#verify if random forest is adequate with cross-validation
-
-Fit.RF <- rfcv(x_train,
-               y_train$HDI_rank, 
-               ntrees=200,
-               cv.fold=5) 
-
-with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
-
-# error does not tend to 0 (tends to 0.50), 
-# probably not an optimal algorithm or dataset not otimized
-
-
-model<-randomForest(y_train$HDI_rank ~., 
-                    data=x_train,
-                    ntrees=200)
-
-# verify for training set -> expecting accuracy of 100%
-rf.pred.training=predict(model,x_train,type="class")
-
-showMetrics(rf.pred.training, x_train, y_train)
-
-# verify for test set
-rf.pred=predict(model, x_test, type="class")
-predMatrix = with(x_test, table(rf.pred, y_test$HDI_rank))
-
-showMetrics(rf.pred, x_test, y_test)
-importance(model)
-
-
-#----------Naive Bayes----------
-
-#--------classification using cluster output--------
-
-NBclassifier <- train(x_cluster_train, 
-                      y_cluster_train$HDI_rank, 
-                      method = "nb", 
-                      trControl = trainControl(method = "cv", number = 5))
-
-pred <- predict(NBclassifier, newdata=x_cluster_test, type="raw")
-
-showMetrics(pred, x_cluster_test, y_cluster_test)
-
-
-
-#----------classification using wdi data--------------------------
-
-NBclassifier <- train(x_train, 
-                      y_train$HDI_rank, 
-                      method = "nb", 
-                      trControl = trainControl(method = "cv", number = 5))
-
-pred <- predict(NBclassifier, newdata=x_test, type="raw")
-
-showMetrics(pred, x_test, y_test)
-
+runClassification(data)
