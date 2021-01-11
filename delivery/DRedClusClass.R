@@ -1,7 +1,4 @@
 # generic libraries
-getwd()
-setwd("/onedrive/OneDrive - Nokia/scicolab/ist/MA/2020/proj/GIT-AM2020-project/AM2020-project/")
-
 library(devtools) # close png
 library(caret)
 
@@ -336,7 +333,7 @@ x_PCA_test=data_afterPCA[-trainIndex, ]
 #-------------data load--------------------------
 
 #Dataset after clustering
-WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
+WDI_CLUSTERING <- read.csv(".//WDI_CLUSTERING.csv")
 cluster_data <- WDI_CLUSTERING[, -c(1)]
 c_data <- cluster_data[, -c(15)]
 

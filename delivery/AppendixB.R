@@ -15,7 +15,7 @@ set.seed(42)
 
 #-------------data load--------------------------
 
-WDI <- read_csv(".//WDI_shortnames.csv")
+WDI <- read_csv(".//WDI.csv")
 data <- WDI[,-c(1,71,72)] # removing the outcome variables
 data <- data[, order(names(data))]
 outcome <- WDI[,c(71,72)]

@@ -7,7 +7,7 @@ library(mRMRe)
 
 options(digits=3)
 
-WDI <- read_csv("data/WDI_shortnames.csv")
+WDI <- read_csv(".//WDI.csv")
 head(WDI)
 
 data <- WDI[,-c(71,72)] # removing the outcome variables
@@ -265,7 +265,7 @@ write.csv(data_to_export, file = "data/mRMR_reduced_data.csv")
 #######################################
 #the same with full data set
 
-WDI_full <- read_csv("data/WDI_full.csv")
+WDI_full <- read_csv(".//WDI_full.csv")
 head(WDI_full)
 
 outcome_full <- WDI_full[,c(369,370)]
