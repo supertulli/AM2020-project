@@ -4,16 +4,16 @@ library(caret)
 
 #-----------------------------------------------------------------
 # import data
-data<-read.csv(".//mRMR_reduced_data.csv", header = TRUE, sep = ",")
+data<-read.csv("..//mRMR_reduced_data.csv", header = TRUE, sep = ",")
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
 
 # save the oucome in classes
-outcome <- data[,16] 
+outcome <- data[,15] 
 outcome <- factor(outcome, levels = c(0,1,2,3), 
                   labels = c("Negative", "Low", "Medium", "High"))
 
-data = data[, -15:-16] # remove the outcome (both in classes and value)
+data = data[, -15] # remove the outcome
 
 trainIndex = createDataPartition(outcome, p=0.8)$Resample1
 
@@ -22,7 +22,6 @@ x_train=data[trainIndex, ]
 x_test=data[-trainIndex, ]
 y_train=outcome[trainIndex]
 y_test=outcome[-trainIndex]
-
 
 
 #----------Principal Component Analysis----------------------------
