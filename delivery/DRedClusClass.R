@@ -459,3 +459,8 @@ predictions <- predict(RFclassifier, newdata=x_cluster_test)
 confmatrix<-confusionMatrix(predictions, y_cluster_test)
 showMetrics(predictions, y_cluster_test)
 
+#-----overlap c
+library(plyr)
+y_cluster_pred = revalue(y_cluster_test, c("One"="Medium", "Two"="High", "Three"="Low"))
+confusionMatrix(y_cluster_pred,y_test)
+

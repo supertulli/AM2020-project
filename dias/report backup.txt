@@ -1,0 +1,806 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\setlength{\parskip}{0.7em}
+% \usepackage{a4wide}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{graphics}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage[counterclockwise, figuresleft]{rotating}
+
+% \usepackage{subfigure}
+
+\lstset{frame=tb,
+language=R,
+basicstyle=\footnotesize,
+keywordstyle=\color{blue},
+alsoletter={.}
+}
+
+\setlength\parindent{0pt}
+
+\newcolumntype{L}{>{\centering\arraybackslash}p{2cm}}
+
+\title{Predictability of \\Human Development Index}
+\author{Pedro Sousa\footnote{Instituto Superior Técnico – 42022 -  \texttt{pedrodesousa@tecnico.ulisboa.pt}}
+\and Andre Luis\footnote{Instituto Superior Técnico – 98638 –  \texttt{andre.t.luis@tecnico.ulisboa.pt}}
+\and Carlos Sequeira\footnote{Instituto Superior Técnico – 87638 –  \texttt{carlos.r.sequeira@tecnico.ulisboa.pt}} 
+\and Sara Cruz\footnote{Instituto Superior Técnico – 79410 – \texttt{sara.cruz@tecnico.ulisboa.pt}}
+\and Pedro Dias\footnote{Instituto Superior Técnico – 39953 – \texttt{pedroruivodias@tecnico.ulisboa.pt}}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The United Nations Development Programme (UNDP) provides a widely accepted ranking of countries according to their human development status \cite{wiki:hdi}. 
+The annual score of each country is called Human Development Index (HDI) and it combines four development indicators: life expectancy for health, expected years of schooling, mean of years of schooling for education and Gross National Income (GNI) per capita  for standard of living. 
+Explaining and predicting the progress of such index can be used to evaluate the quality of public policies as well as to assess what better explains inequalities and certain status in human development. 
+Factors such as available natural resources, accumulated capital, social norms, fiscal policies, re-distributive policies, political institutions quality, all should play a role in the HDI outcome, but often not in the direction intuition would point to.
+\end{abstract}
+
+\section{Introduction}
+
+The Human Development Report 2019 \cite{human_dev_index} is subtitled: \textit{Human development beyond income, beyond averages, beyond today: Inequalities in human development in the 21st century}. The report includes an in-depth exploration of the HDI progress in the 21st century up to 2018 for almost all countries in the world, and, in chapter 7, it concludes that inequalities in basic capabilities are falling, however, in some areas perceived as essential beyond 2020, inequalities in human development are growing. It also concludes that inequalities in the distribution of opportunities between men and women have improved. Then the report discusses in detail some of the spotlights derived from the data analysis, as an example, it discusses how to address constraints in social choice, or how to balance productivity and equity with environmental sustainability.
+
+Our project objective is to explore the World Bank data \cite{world_bank_databank} to find additional explanations predictive of the progress of HDI in the 21st century which could contribute to the discussion held in chapter 7 of \cite{human_dev_index}.
+
+Because we want to explain the progress of the Human Development Index, our \textit{label} or \textit{dependent} variable, is a two year difference between HDI for every given country. In detail, such difference is defined as the difference between the country HDI at a given year and the HDI two years later as follows: 
+
+$$HDI_{\Delta}=HDI_{y+2} - HDI_{y}$$
+
+As assumption, we considered the year to year changes less informative because it is often the case that some of the statistics used to derive the HDI are not reported every year, creating an additional measurement lag between HDI and the real changes it assesses. Thus, instead, we take a two year change to have a more robust label, one that is also more sensitive to sustainable changes as opposed to one-off variations (\textit{e.g.}: natural catastrophe, formula revisions, election year book cooking). Moreover, because the quality of political institutions can be questioned in many countries, the quality of the statistics and reporting provided is also often questionable, thus, focusing on the variation makes the overall data analysis less biased by inter country variability in the quality of statistics or political institutions.
+
+Our source for the HDI data was the UNDP Human Development Data Center \cite{source:hdi}. A sample from the HDI original data set is represented by table~\ref{table:HDIData}
+
+\begin{table}[ht]
+     \begin{minipage}[b]{0.46\linewidth}
+         \centering
+    \resizebox{0.98\columnwidth}{!}{%
+    \begin{tabular}{|c|c||c|c|c|c|}
+    \hline
+        HDI Rank & Country & 1990 & 1991 & ... & 2018 \\
+        (2018) &  &  &  &  &  \\ \hline
+        \hline
+        170 & Afghanistan & 0.298 & 0.304 & ... & 0.496 \\ 
+        \hline
+        69 & Albania & 0.644 & 0.625 & ... & 0.791 \\ 
+        \hline
+        82 & Algeria & 0.578 & 0.582 & ... & 0.759 \\ 
+        \hline
+        36 & Andorra & na & na & ... & 0.857 \\ 
+        \hline
+        149 & Angola & na & na & ... & 0.574 \\ \hline
+    \end{tabular}
+    }
+    \caption{\label{table:HDIData}Table: sample from HDI.csv file. \newline A 212x31 matrix.}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.54\linewidth}
+         \centering
+    \resizebox{0.98\columnwidth}{!}{%
+    \begin{tabular}{|c|c|c||c|c|c|}
+    \hline
+        Country & Country & Indicator & 1960 & ... & 2018 \\
+        Name & Code & Name &  &  &  \\ \hline
+        \hline
+        Arab World & ARB & Access to cl... & na & ... & na \\
+        \hline
+        Arab World & ARB & Adjusted sav... & na & ... & 5.084 \\
+        \hline
+        Arab World & ARB & Adolescent f... & 134.8 & ... & 46.01 \\
+        \hline
+        Arab World & ARB & Age dependen... & 88.06 & ... & 61.17 \\
+        \hline
+        Arab World & ARB & Arable land ... &  na & ... &  na \\ \hline
+    \end{tabular}
+    }
+    \caption{\label{table:WDIData}Sample from WDIData.csv file. \newline A 9504x66 matrix.}
+     \end{minipage}
+\end{table}
+
+The World Development Indicators, our \textit{independent} or \textit{explanatory variables} or \textit{features}, were also pre-processed to include variations over 2 years, and the reasoning is the same as for the HDI, just that the difference is, in this case, taken comparing a given year value with the value reported two years before as follows: 
+$$WDI_{\Delta} = WDI_y - WDI_{y-2}$$
+
+The hypothesis is that an increasing or decreasing trend can contribute as predictor to the label variable.
+Taking all into account, a 4 year period is contributing to any given sample and thus, to maximize sample independence, we do not overlap periods in the process of producing the samples out of the WDI and HDI data sets, instead, we build one sample for each country every four years for a period that starts in 1998 and ends in 2018.
+
+Our source for the WDI data was the World Bank \cite{source:wdi}. A sample from the WDI original data set can be found in table~\ref{table:WDIData}.
+
+\section{Data set preparation}
+
+This section explains the main assumptions and the rational underlying the decisions made for the variable and object selection task that preceded the statistical analysis.
+
+Both data sets, WDIData.csv and HDI.csv, have several country aggregates derived from countries already represented in the data set (dependent samples). For that reason we discarded aggregates from both data sets. Aggregates such as ``East Asia and the Pacific'', ``Europe and Central Asia'', ``Latin America and the Caribbean'', ``South Asia'', ``Sub-Saharan Africa'' or ``Least Developed Countries''.
+
+Both data sets need also to be unpivoted from wide to long format before concatenating all data along the rows. Finally, all variables can become represented as columns by pivoting the concatenated rows. The result is a conventional tabular data set still quite populated with empty values. 
+
+To avoid empty values and to focus on a comprehensible set of explanatory variables, we selected 36 World Development Indicators ($WDI$) excluding those metrics that have more than 20 empty values and excluding variants of the same metric differing in the unit or quantity used as reference. 
+Empty values in most cases simply mean that such metric is only available for few countries or for more recent dates.
+
+The data set preparation includes the calculation of $WDI_{\Delta}$ as follows:
+$$WDI_{\Delta} = WDI_y - WDI_{y-2}, \forall y \in \{2000, 2004, 2008, 2012, 2016\}$$
+
+Likewise, we also calculate the $HDI_{\Delta}$ as follows: 
+$$HDI_{\Delta} = HDI_{y+2} - HDI_{y}, \forall y \in \{2000, 2004, 2008, 2012, 2016\}$$ 
+
+And from it, we derive a classification label that splits the $HDI_{\Delta}$ into four fairly balanced bins, in detail: $HDI_{\Delta} \leq 0$; $0 < HDI_{\Delta} \leq 0.007$; $0.007 < HDI_{\Delta} \leq 0.013$ and $HDI_{\Delta} > 0.013$. 
+The rational for this 4 bins is the following: lowest bin follows the intuition that a less than 0 $HDI_{\Delta}$ is a significant group that should have its own category.
+However, once most samples do register a higher than 0 value, we partitioned the higher than 0 portion in 3 groups using percentiles so that it results in fairly balanced classes to avoid majority class bias. 
+As result, we got the 0.007 and 0.013 thresholds (see figure~\ref{fig:fig1}).
+
+\begin{table}[ht]
+     \begin{minipage}[b]{0.5\linewidth}
+         \centering
+         \includegraphics[width=6cm]{figures/fig1.png}
+         \captionof{figure}{$HDI_{\Delta}$ distribution split into 4 classes}
+         \label{fig:fig1}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.5\linewidth}
+        \centering
+        \resizebox{0.7\textwidth}{!}{%
+        \begin{tabular}{|c|c|c|}
+        \hline
+            HDI.Delta.cat & Label & Number of samples \\ \hline
+            \hline
+            0 & negative  & 36  \\ 
+            \hline
+            1 & low & 200 \\ 
+            \hline
+            2 & medium & 190 \\ 
+            \hline
+            3 & high & 190 \\ \hline
+       \end{tabular}%
+       }
+       \caption{Number of samples per class.}
+       \label{table:classes}
+     \end{minipage}
+ \end{table}
+
+The outcome from the data preparation is the file represented by table~\ref{table:WDI}. Moreover, we also renamed all the variables making the names both comprehensible and short enough to ease presentation in charts and tables.
+
+\begin{table}[h]
+    \centering
+    \resizebox{0.7\columnwidth}{!}{%
+    \begin{tabular}{|c||c|c|c|c|c|}
+    \hline
+        Country.Year & eco.CleanCook & geo.UrbanPop & ... & HDI.Delta & HDI.Delta.cat \\ \hline
+        \hline
+        Afghanistan - 2008 & 1.949 & 23.113 & ... & 0.028 & 3 \\
+        \hline
+        Afghanistan - 2012 & 4.818 & 23.948 & ... & 0.009 & 2 \\
+        \hline
+        Afghanistan - 2016 & 7.630 & 24.803 & ... & 0.005 & 1 \\
+        \hline
+        Albania - 2004 & 1.261 & 44.575 & ... & 0.017 & 3 \\
+        \hline
+        Albania - 2008 & 16.169 & 48.902 & ... & 0.016 & 3 \\ \hline
+    \end{tabular}
+    }
+    \caption{\label{table:WDI}Sample from the prepared data (WDI.csv file). A 616x74 matrix.}
+\end{table}
+
+The label column \textit{HDI.Delta.cat} has four levels, from 0 to 3, corresponding to the following labels: \textit{negative}, \textit{low}, \textit{medium} and \textit{high}, qualifying the progress of the HDI along the two years that followed the predictors measurement. It should be pointed out that the result from the proposed class split makes the dataset labels unbalanced given that \textit{negative} labels are very under-represented compared to the other three classes as demonstrated in table~\ref{table:classes}.
+
+As referred previously, the original indicator set, from \cite{source:wdi}, is extensive, we started with 187 potential explanatory variables, being many of them highly correlated and easily reducible using just common sense. Taking the role of project owner, the group elements took a pool on which features could be dropped before any statistical analysis. Such voting established 36 variables resulting in the set of variables listed in appendix~\ref{appendix:varlist}. All except three of the variables in appendix~\ref{appendix:varlist} include a variant concerning the difference between current year and the 2 years before ($WDI_{\Delta}$). The exceptions are marked with ``*'' and the reason for such exception is the fact that the variable represents already a first order time difference.
+
+\section{Statistical Analysis}
+
+For all variables within each group, a preliminary analysis was performed, which included plotting the histogram and infer to some probable distribution from it, compute the correlation between variables and also boxplots of each variable by outcome.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{stat_analysis/sci_pairs.png}
+    \caption{Pairs panels, box plots by outcome and Q-Q plots for the science and education variables.}
+    \label{fig:pairs.panels-science}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+% \begin{subfigure}{.95\textwidth}
+%     \centering
+%     \includegraphics[width=0.9\textwidth]{stat_analysis/sci_cor_heatmap.png}
+% \end{subfigure}
+\begin{subfigure}{.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{stat_analysis/sci_box.png}
+\end{subfigure}
+\begin{subfigure}{.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{stat_analysis/sci_qq.png}
+\end{subfigure}
+\caption{Box plots by outcome and Q-Q plots for the science and education
+variables.}
+\label{fig:box-qq-science}
+\end{figure}
+
+For instance, from such analysis we could infer that \textit{sci.WomenBusinessLaw} follows a distribution that is fairly normal, given the good fit of data to the quantiles of a normal distribution, as shown in the respective Q-Q plot. Also one can observe that it is positively correlated with \textit{sci.Internet}. 
+
+This approach, although proving to give some insight from the variables 
+lacks the ability to identify correlations (and therefore linear interactions) between variables from distinct defined groups (and also from their variations grouped in separate sets as well). As it is very hard to assess all combinations of the considered variables in sensible amounts of time and effort, and present such an analysis in a comprehensible way. 
+
+To ease this task, we adopted an automated feature reduction strategy \footnote{As graceful suggestion of our professor.}, namely the \textit{mRMR} feature selection proposed by \cite{1453511} and implemented in the R package \texttt{mRMRe}. 
+
+\textit{mRMR} stands for ``minimum Redundancy, Maximum Relevanc'' and tries to choose a given $j$ number of features such that, of all possible $j$-set of features, the one that maximizes the dependency on the target feature. This is done in an incremental procedure by calculating the information gain in order to estimate the former dependency. 
+Using this method it is difficult to determine which is the correct number of variables will give the best result, and the number of 16 variables was chosen as a large enough number of variables which are still presentable and interpretable.
+% A brief explanation of the mRMR
+
+The reduced feature set that was selected was the following: \textit{dem.MortalityInfant}, \textit{dem.BirthRate.var}, \textit{hs.DrinkingWater}, \textit{dem.PopGrowth}, \textit{dem.MortalityUnder5.var}, \textit{dem.Pop0to14}, \textit{eco.CO2Emissions}, \textit{sci.EduExpense}, \textit{dem.LifeExpectancy}, \textit{dem.DeathRate.var}, \textit{eco.AgeDependancyRate}, \textit{hs.BasicSanitation}, \textit{hs.GovHealthExpend}, \textit{dem.MortalityUnder5}, \textit{dem.AdolescentFertRate.var} and \textit{dem.BirthRate}. 
+
+The \texttt{pairs.panels} plot of the mRMR 16 features subset is presented on figure~\ref{fig:pairs_mRMR} in appendix \ref{appendix:overfig}.
+
+%\begin{figure}[]
+%\makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{stat_analysis/mRMR_16_pairs.png}}%
+%	\caption{Pairs panel plots of mRMR reduced dataset}
+%	\label{fig:pairs_mRMR} 
+%\end{figure}
+
+Looking to the Pearson correlations between variable pairs (refer to  figure \ref{fig:corrheatmap} from appendix \ref{appendix:overfig}), there are two which stand out as highly correlated: \textit{dem.BirthRate} and \textit{dem.Pop0to14} with a correlation of $0.97$; and {dem.MortalityInfant} with  \textit{dem.MortalityUnder5}, having a correlation of $0.99$. Also the correlation profile with the remaining features seems to be similar within each pair, and therefore one of the features in each of the highly correlated pairs can be dropped due to redundancy. As a result \textit{dem.Pop0to14} and \textit{dem.MortalityInfant} were taken out of the feature selection, keeping the remaining representative features.
+
+%\begin{figure}[H]
+%\makebox[\textwidth][c]{\includegraphics[width=0.9\textwidth]{stat_analysis/mRMR_16_cor_heatmap.png}}%
+%	\caption{mRMR 16 Correlation Heatmap}
+%	\label{} 
+%\end{figure}
+
+From the heatmap, shown in \ref{appendix:overfig} figure \ref{fig:corrheatmap}, given that the correlation is, for almost any variable, fairly significant (with absolute value not close to zero), we can deduce that dependence among variables exists and it is not negligible, the only exception being \textit{sci.EduExpense}, which is less correlated with every other feature.
+We can observe also that:
+\begin{itemize}
+    \item \textit{dem.BirthRate} is positively correlated with, \textit{eco.AgeDependancyRate} and \textit{dem.MortalityUnder5};
+    \item \textit{dem.AdolescentFertRate.var} is mildly inversely correlated with \textit{eco.AgeDependancyRate};
+    \item \textit{dem.MortalityUnder5} is strongly inversely correlated with \textit{hs.BasicSanitation} and \textit{hs.DrinkingWater};
+    \item \textit{sci.EduExpense} is not as strongly correlated as the previous features, yet it mildly correlates inversely with \textit{dem.MortalityUnder5};
+    \item \textit{eco.CO2Emissions} are inversely correlated with \textit{dem.BirthRate};
+    \item \textit{hs.GovHealthExpend} positively correlates with \textit{dem.LifeExpectancy}.
+\end{itemize}
+
+Also worth mentioning is the existence of some specific extreme values in the some features, which can be observed in figure \ref{fig:pairs_mRMR}, which can be found in appendix \ref{appendix:overfig}:
+\begin{itemize}
+    \item in \textit{dem.MortalityUnder5.var} an occurrence stands out as an extreme, taking the value of $-86.80$ for Haiti in 2012, which indicates that in 2010 the mortality under 5 was abnormally high. This is most likely due to the earthquake which took place in that here and leveled Port-au Prince city to the ground, killing many people as direct consequence, but also indirectly by compromising the sanitation conditions in the affected areas for some time, which left small children susceptible to illness, disease and death;
+    \item in \textit{sci.EduExpense} we can identify three values which are also very separate from all other observations, having the value of $23,6\%$ of the GNI. These values belong to the Micronesia Federation on the years regarding 2008, 2012 and 2016, and can be due to the government financing the expenses of students who might need to go abroad to follow and conclude their higher academic studies. 
+\end{itemize}
+
+Histograms in figure~\ref{fig:hist_mRMR} and Q-Q plots in figure~\ref{fig:qq_mRMR} were obtained for all features selected by \textit{mRMR}. Firstly one can identify that the redundant and excluded features do have a identical distribution to the ones that remained in the selected 14 feature set. Secondly, while some features like \textit{dem.AdolescentFertRate.var} and \textit{sci.EduExpense} do tend to follow some normal distribution to most extent of the observed instances, \textit{hs.BasicSanitation} and \textit{hs.GovHealthExpend} among others do not, and this can have implications in the following tasks and should be taken into account.
+
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.7\textwidth]{stat_analysis/mRMR_16_histogram.png}}%
+	\caption{mRMR 16 Histograms}
+    \label{fig:hist_mRMR} 
+\end{figure}
+
+Finally box plots by outcome were also obtained in figure~\ref{fig:box_mRMR}, and although there are features to which each group mean is different for each class, the variation of mean is not monotonous and the there is a extensive overlap among classes within each feature, without any exception. This most likely indicates that the class outcome is not very discernible by the chosen (and available) predictor variables, and so the classifier that is to be implemented will most likely struggle to have a decent performance in identifying the correct class of any occurrence in such indiscernible population. 
+
+\begin{figure}[]
+\makebox[\textwidth][c]{\includegraphics[width=0.77\textwidth]{stat_analysis/mRMR_16_qq.png}}%
+	\caption{Q-Q plots of mRMR reduced dataset}
+	\label{fig:qq_mRMR} 
+\end{figure}
+\begin{figure}[H]
+\makebox[\textwidth][c]{\includegraphics[width=0.77\textwidth]{stat_analysis/mRMR_16_box.png}}%
+	\caption{Box plots by \textit{HDI\_rank} of mRMR reduced dataset}
+	\label{fig:box_mRMR} 
+\end{figure}
+
+\subsection{Principal Component Analysis}
+Even though the previous analysis allowed a reduction from roughly 70 to 14 explanatory variables, this number could still be intractable for some further study and interpretation.
+Thus, we proceed by analyzing the principal components, in order to find the linear combinations within the set of variables that better explain the variability of the data, and provide a smaller and more practicable set of uncorrelated variables to continue our work, as described in \cite{statLearn} and \cite{multAnalysis}.
+
+Prior to the Principal Component Analysis, and because the output from PCA is later used in a classification task, we split the data between \textit{train} (80\%) and \textit{test} (20\%) using the R package \texttt{caret} to ensure all labels are represented in both sets as they are in the complete data set.
+The principal components were learned from the training set and then applied to the test set after the analysis and before the clustering exercise, which takes the complete data as input. 
+
+Since there are different scales among data, we use the standardized version of the PCA, so that it is able to better reveal relationships between variables and be more informative. 
+To perform the classical PCA, we used the available method implemented in the R package \texttt{rrcov}.
+Upon the event of choosing the number of components to retain, we resorted to two criteria and chose the minimum $k$ among those.
+The first was to find $k$ such that $\lambda_i \geq \Bar{\lambda}$, for $i = 1,\dots, k$, $i.e.$, find the principal components whose variance is above the mean of all variance, which, since we are dealing with standardized data, is 1.
+The second was to find $k$ such that $\frac{\sum_{i=1}^k \lambda_i}{\sum_{j=1}^p \lambda_j} \geq 0.8$, meaning that $80\%$ of the variance is explained by the first $k$ principal components.
+The method that yielded the lowest value of $k$ was the first one and hence we proceeded with 4 principal components.
+
+With this analysis we are also able to assess the relative importance of each variable at each principal component by observing the magnitude of the respective loadings.
+As seen in figure~\ref{fig:loadings_classic}, the coefficients of the first eigenvalue vary between $-0.35$ and $0.35$, and, since the relative importance of a variable is given by the magnitude of its corresponding coefficient, rather than its sign, we can assess that there are several variables contributing to the variance explained by the first component (52.6\%) which are \textit{hs.DrinkingWater}, \textit{hs.BasicSanitation}, \textit{eco.AgeDependencyRate}, \textit{dem.MortatilityUnder5}, \textit{dem.LifeExpectancy}, and \textit{dem.BirthRate}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.45\linewidth}
+    \includegraphics[width = \textwidth]{figures/loadings_pcaClassic1row.png}
+    \caption{Classical PCA (selected principal components).}
+    \label{fig:loadings_classic}
+\end{subfigure}
+\begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics[width = \textwidth]{figures/loadings_pcaRobust.png}
+    \caption{Robust PCA.}
+    \label{fig:loadings_robust}
+    \end{subfigure}
+    \caption{Relative importance of each variable given the loadings of the PC's.}
+\end{figure}
+
+Not only is PCA scale sensitive, as its results might be severely biased by the presence of outliers, as pointed out by Hubert, Rousseeuw, and Vanden Branden in \cite{hubert2005robpca}.
+The authors propose a robust method for principal component analysis (ROBPCA) which is also implemented in the same \texttt{rrcov} package.
+We apply the method to the data in order to not only assess the presence of outliers, but also to proceed the work with a sounder combination of variables.
+
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.5\textwidth]{figures/outliers_pcaRobust.png}
+    \caption{Outlier detection with robust PCA.}
+    \label{fig:outliers_robust}
+\end{figure}
+
+ROBPCA classifies the data points into four types: the regular observations, the good leverage points (points which are close to the PCA space, but far from the regular observations), the orthogonal outliers (points whose orthogonal distance to the PCA is large, but lie among the other points when projected on the PCA space), and the bad leverage points, which have both large orthogonal distance and score distance (distance on the PCA space). 
+As we can observe in figure~\ref{fig:outliers_robust}, there are two almost overlapped points of the bad leverage type corresponding to the observations of the Micronesia Federation, which have already been identified on the preliminary analysis, some borderline orthogonal outliers, which appear in red above the horizontal line, and some prominent as the observation Haiti-2012, an the two observations of Qatar. 
+Finally it is possible to observe a good leverage point – the Afghanistan-2012 observation, whose orthogonal distance is small, but yet lies beyond the threshold of the accepted distance on the PCA space.
+
+Despite the presence of outliers, the relative importance of each variable on the first principal component does not differ too much from the classical PCA.
+But we can observe some differences on the two remaing components.
+A notable aspect of the differences between both methods is the fact that the robust PCA is able to explain $100\%$ of the total variance while yielding only 3 components.
+
+\section{Clustering}
+
+In this section we will look for natural clusters in the data set that resulted from applying mRMR feature selection and after the Principal Component analysis. We will explore the natural clusters using $K$-means \cite{MacQueen1967} and $K$-medoids \cite{books/wi/KaufmanR90}. With $K$-medoids we can take advantage from its robustness in dealing with outlier samples and from its flexibility to take distance metrics other than Euclidean.
+
+\subsection{$K$-means clustering of mRMR data set}
+
+\begin{table}[ht]
+     \begin{minipage}[b]{0.5\linewidth}
+         \centering
+         \includegraphics[width=7cm]{figures/silhouette_mrmr.png}
+         \captionof{figure}{Average silhouette\newline coefficient vs k}
+         \label{fig:silh}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.5\linewidth}
+         \centering
+         \includegraphics[width=7cm]{figures/elbow_mrmr.png}
+         \captionof{figure}{Elbow method}
+         \label{fig:elbow}
+     \end{minipage}
+\end{table}
+
+% \begin{figure}[h!]
+%   \centering
+%   \includegraphics[width=0.6\textwidth]{figures/mrmr_kmeans3.jpg}
+%   \caption{2d projection of $K$-means clusters for k=3}
+%   \label{fig:mrmr_kmeans}
+% \end{figure}
+
+The choice regarding the $K$-means number of clusters will be taken inspecting the outcome from three distinct methods: the Elbow method \cite{wiki:elbow}, the average silhouette coefficient \cite{Rousseeuw:1987:SGA:38768.38772}, and finally validated using the ratio between the between sum of squares and the total sum of squares (BdT) calculated as follows: $BdT = \frac{\sum{SSE} - \sum_i^k{WCSS_i}}{\sum{SSE}}$ (from \cite{mouselimis_2020}).
+The Elbow method, refer to figure~\ref{fig:elbow}, suggests that k=2 is an appropriate number of clusters. The silhouette coefficient suggests also that k=2 or k=3 provides good separation between the clusters ($>0.25$). Finally, to decide between k=2 and k=3, we compare result from the BdT index for each k: once for $BdT_{k=2} = 0.413$ and $BdT_{k=3} = 0.4885$, $BdT_{k=3} > BdT_{k=2}$, so we finally go for $k=3$. The final clusters are represented in figure~\ref{fig:mrmr_kmeans} as a 2d projection based on the first two principal components. It is a reliable representation of the clusters separation since it accounts for 62\% of the variance, giving a good intuition on the final result.
+
+\subsection{$K$-medoids clustering of mRMR data set}
+
+Following the same criteria to choose the number of clusters, we performed $K$-medoids on the mRMR feature selection data set, and represent the final clusters (k=3) as a 2d projection in figure~\ref{fig:mrmr_kmedoids}.
+The use of $K$-medoids is convenient when the number of variables tends to be quite small increasing the chances of having outlier samples caused by single variable extreme values, making necessary a method less sensitive to outliers. Additionally, we tested Manhattan distance because and it outperformed Euclidean distance when comparing cluster separability. 
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.45\linewidth}
+      \includegraphics[width = \textwidth]{figures/mrmr_kmeans3.jpg}
+      \caption{2d projection of $K$-means clusters for k=3}
+      \label{fig:mrmr_kmeans}
+    \end{subfigure}
+  \begin{subfigure}{0.45\linewidth}
+  \centering
+  \includegraphics[width = \textwidth]{figures/mrmr_kmedoids3.jpg}
+  \caption{2d projection of $K$-medoids clusters for k=3}
+  \label{fig:mrmr_kmedoids}
+\end{subfigure}
+\caption{$K$-means and $K$-medoids clustering on the mRMR feature selection data set.}
+\label{fig:mrmr_clusters_over_classes}
+\end{figure}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.6\textwidth]{figures/mrmr_kmedoids3.jpg}
+%   \caption{2d projection of $K$-medoids clusters for k=3}
+%   \label{fig:mrmr_kmedoids}
+% \end{figure}
+
+\subsection{$K$-means and $K$-medoids clustering on the Robust Principal Components }
+
+In order to work on a smaller feature space, we performed clustering on the classical and robust PCA results presented above, taking advantage of the interpretation of each principal component to characterize our cluster solution. The criteria to choose k was the same as above and the result is k = 3. Specifically on the Robust PCA, the first 2 robust principal components were used and produced the results presented in figures \ref{fig:robpca_kmeans} and \ref{fig:robpca_kmedoids}.
+
+% \begin{table}[ht]
+%      \begin{minipage}[b]{0.45\linewidth}
+%          \centering
+%          \includegraphics[width=8cm]{figures/robpca_kmeans3.jpg}
+%          \captionof{figure}{2d projection of $K$-means clusters for k=3}
+%          \label{fig:robpca_kmeans}
+%      \end{minipage}\hfill
+%      \begin{minipage}[b]{0.45\linewidth}
+%          \centering
+%          \includegraphics[width=8cm]{figures/robpca_kmedoids3.jpg}
+%          \captionof{figure}{2d projection of $K$-medoids clusters for k=3}
+%          \label{fig:robpca_kmedoids}
+%      \end{minipage}
+% \end{table}
+\begin{figure}[H]
+     \begin{subfigure}{0.45\linewidth}
+         \centering
+         \includegraphics[width = \textwidth]{figures/robpca_kmeans3.jpg}
+         \caption{2d projection of $K$-means clusters for k=3}
+         \label{fig:robpca_kmeans}
+     \end{subfigure}
+     \begin{subfigure}{0.45\linewidth}
+         \centering
+         \includegraphics[width = \textwidth]{figures/robpca_kmedoids3.jpg}
+         \caption{2d projection of $K$-medoids clusters for k=3}
+         \label{fig:robpca_kmedoids}
+     \end{subfigure}
+     \caption{$K$-means and $k$-medoids on the robust principal components.}
+     \label{fig:robpca_clusters_over_classes}
+\end{figure}
+
+\section{Classification}
+\label{section:classification}
+
+To solve the classification problem: the prediction of the factorized $HDI_\Delta$, we will test several commonly used classifiers, namely Random Forest, Naïve Bayes, Linear Discriminant Analysis, Quadratic Discriminant Analysis and K-Nearest Neighbors.
+To test the classifiers we are going to take the train data set and do 5-Fold Cross-Validation while doing grid search to find the best hyper-parameters for tuning each classifier. Both these procedures are streamlined in the \texttt{caret} R package and all the tested classifiers are also supported by \texttt{caret}. 
+As a relevant remark, we are not repeating the PCA for every validation fold, we assume that there can be some over-fit in the validation but it shall not affect significantly the model choice.
+
+\begin{table}[ht]
+     \begin{minipage}[b]{1\linewidth}
+         \centering
+         \resizebox{0.65\textwidth}{!}{%
+\begin{tabular}{l|l|cc|cc|cc|cc|}
+\cline{3-10}
+   \multicolumn{2}{c|}{} & \multicolumn{2}{c|}{rMRM} & \multicolumn{2}{c|}{rMRM+ROBPCA} & \multicolumn{2}{c|}{rMRM+PCA} & \multicolumn{2}{c|}{rMRM} \\ 
+    \multicolumn{2}{c|}{} & \multicolumn{2}{c|}{label} & \multicolumn{2}{c|}{label} & \multicolumn{2}{c|}{label} & \multicolumn{2}{c|}{cluster} \\
+    \cline{3-10}
+             \multicolumn{2}{c|}{} & acc & b.acc & acc & b.acc & acc   & b.acc  & acc & b.acc     \\
+    \cline{2-10}
+& Random Forest & 45.1 & 58.8 & 37.4 & 54.7 & 44.0 & 58.2 & 95.9 & 97.7 \\
+\cline{2-10}
+& Naïve Bayes   & 43.0 & 58.6 & 43.1 & 57.1 & 39.7 & 55.5 & 91.8 & 94.8 \\ 
+\cline{2-10}
+& LDA           & 44.5 & 59.2 & 43.3 & 57.2 & 42.5 & 56.9 & 95.1 & 95.2 \\
+\cline{2-10}
+& QDA           & 44.5 & 59.6 & 44.9 & 58.2 & 40.9 & 56.3 & 93.1 & 95.6 \\ 
+\cline{2-10}
+& KNN           & 43.3 & 57.5 & 41.1 & 56.1 & 42.3 & 56.8 & 94.5 & 94.2 \\
+\cline{2-10}
+\end{tabular}%
+}
+\caption{Validation scores for each classifier and for each dimensionality reduction technique.}
+\label{table:valscores}
+\end{minipage}
+\end{table}
+
+Table \ref{table:valscores} summarizes the best scores obtained for each classifier and the outcome is that, to predict the HDI progress, the best choice is the use of Random Forest \cite{breiman2001random} before applying any PCA. 
+
+\subsection{Classification predicting \textit{HDI\_rank} label}
+
+To provide performance metrics for the final model predicting the HDI progress, we made estimates using the test set and summarized the  result in tables ~\ref{table:hdi_CM}, ~\ref{table:hdi_MT} and ~\ref{table:hdi_SC}.
+
+\begin{table}[ht]
+     \begin{minipage}[b]{0.32\linewidth}
+         \centering
+         \resizebox{1\textwidth}{!}{%
+         \begin{tabular}{l|c|c|c|c|c|}
+              \multicolumn{2}{c}{}&\multicolumn{3}{c}{Real}\\
+              \cline{3-6}
+              \multicolumn{2}{c|}{Pred}&Negative&Low&Medium&High\\
+              \cline{2-6}
+              & Negative & 0 & 1 & 0 & 1 \\
+              \cline{2-6}
+              &  Low & 4 & 21 & 10 & 5 \\
+              \cline{2-6}
+              & Medium & 1 & 10 & 16 & 14 \\
+              \cline{2-6}
+              & High & 4 & 7 & 11 & 17 \\
+              \cline{2-6}
+          \end{tabular}%
+         }
+         \caption{Confusion Matrix.}
+         \label{table:hdi_CM}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.34\linewidth}
+         \centering
+         \resizebox{0.9\textwidth}{!}{%
+               \begin{tabular}{l|c|c|c|c|}
+              \multicolumn{2}{c}{}&\multicolumn{3}{c}{Metric}\\
+              \cline{3-5}
+              \multicolumn{2}{c|}{}&Precision&Recall&F1-Score\\
+              \cline{2-5}
+              & Negative & 0 & 0 & - \\
+              \cline{2-5}
+              &  Low & 0.525 & 0.538 & 0.532 \\
+              \cline{2-5}
+              & Medium & 0.390 & 0.432 & 0.410 \\
+              \cline{2-5}
+              & High & 0.435 & 0.459 & 0.447 \\
+              \cline{2-5}
+          \end{tabular}%
+       }
+       \caption{Metrics for each class.}
+       \label{table:hdi_MT}
+     \end{minipage}
+     \begin{minipage}[b]{0.28\linewidth}
+     	\centering
+     	\resizebox{0.9\textwidth}{!}{%
+         \begin{tabular}{l |c|c|}
+              \cline{3-3}
+              \multicolumn{2}{c|}{}&Score\\
+              \cline{2-3}
+              & Accuracy & 44.3 \\
+              \cline{2-3}
+              & Balanced Accuracy & 57.9 \\
+              \cline{2-3}
+          \end{tabular}%
+    	 }
+     	\caption{Class prediction scores (Random Forest).}
+     \label{table:hdi_SC}
+     \end{minipage}\hfill
+\end{table}
+
+If we take the clustering outcome and combine it in a confusion matrix using class label as true labels and arranging the clusters mapping to classes to maximize accuracy, it results in the confusion matrix displayed by table \ref{table:Clust_CM} and the scores from table \ref{table:Clust_SC}.
+
+\begin{table}[h]
+     \begin{minipage}[b]{0.6\linewidth}
+         \centering
+         \resizebox{0.5\textwidth}{!}{%
+         \begin{tabular}{l|c|c|c|c|c|}
+              \multicolumn{2}{c}{}&\multicolumn{3}{c}{Classes}\\
+              \cline{3-6}
+              \multicolumn{2}{c|}{Clusters}&Negative&Low&Medium&High\\
+              \cline{2-6}
+              & - & 0 & 0 & 0 & 0 \\
+              \cline{2-6}
+              & Three & 1 & 12 & 5 & 3 \\
+              \cline{2-6}
+              & One & 6 & 20 & 18 & 15 \\
+              \cline{2-6}
+              &  Two & 2 & 7 & 14 & 19 \\
+              \cline{2-6}
+          \end{tabular}%
+         }
+         \caption{Confusion Matrix combining clusters and classes.}
+         \label{table:Clust_CM}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.4\linewidth}
+     	\centering
+     	\resizebox{0.7\textwidth}{!}{%
+         \begin{tabular}{l |c|c|}
+              \cline{3-3}
+              \multicolumn{2}{c|}{}&Score\\
+              \cline{2-3}
+              & Accuracy & 40.2 \\
+              \cline{2-3}
+              & Balanced Accuracy & 55.6 \\
+              \cline{2-3}
+          \end{tabular}%
+    	 }
+     	\caption{Use of clusters for prediction.}
+     \label{table:Clust_SC}
+     \end{minipage}\hfill
+\end{table}     
+
+
+\subsection{Classification predicting clustering outcome}
+
+We decided to present the results from the Random Forest classifier in the clustering prediction. These results are presented in tables~\ref{table:RF_CM} ,~\ref{table:RF_MT} and~\ref{table:RF_SC}.  As we can observe in the confusion matrix, only two predictions were wrong resulting in 95.9\% accuracy and 97.7\% balanced accuracy. 
+
+\begin{table}[ht]
+     \begin{minipage}[b]{0.28\linewidth}
+         \centering
+         \resizebox{1\textwidth}{!}{%
+          \begin{tabular}{l|c|c|c|c|}
+              \multicolumn{2}{c}{}&\multicolumn{3}{c}{Real}\\
+              \cline{3-5}
+              \multicolumn{2}{c|}{Pred}&One&Two&Three\\
+              \cline{2-5}
+              & One & 54 & 0 & 0 \\
+              \cline{2-5}
+              &  Two & 2 & 42 & 0 \\
+              \cline{2-5}
+              & Three & 3 & 0 & 21 \\
+              \cline{2-5}
+          \end{tabular}
+         }
+         \caption{Confusion Matrix.}
+         \label{table:RF_CM}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.38\linewidth}
+         \centering
+         \resizebox{0.9\textwidth}{!}{%
+         \begin{tabular}{l|c|c|c|c|}
+         \multicolumn{2}{c}{}&\multicolumn{3}{c}{Metric}\\
+              \cline{3-5}
+              \multicolumn{2}{c|}{}&Precision&Recall&F1-Score\\
+              \cline{2-5}
+              & One & 1.0 & 0.915 & 0.956 \\
+              \cline{2-5}
+              &  Two & 0.955 & 1.0 & 0.977 \\
+              \cline{2-5}
+              & Three & 0.875 & 1.0 & 0.933 \\
+              \cline{2-5}
+          \end{tabular}
+       }
+       \caption{Metrics for each cluster.}
+       \label{table:RF_MT}
+     \end{minipage}
+     \begin{minipage}[b]{0.28\linewidth}
+     	\centering
+     	\resizebox{0.9\textwidth}{!}{%
+        \begin{tabular}{l |c|c|}
+              \cline{3-3}
+              \multicolumn{2}{c|}{}&Score\\
+              \cline{2-3}
+              & Accuracy & 95.9 \\
+              \cline{2-3}
+              & Balanced Accuracy & 97.7 \\
+              \cline{2-3}
+          \end{tabular}%
+    	 }
+     	\caption{Cluster prediction scores (Random Forest).}
+     \label{table:RF_SC}
+     \end{minipage}\hfill
+\end{table}
+
+The performance obtained when predicting the cluster in the test set excels in all metrics, being almost perfect in every class. Although this outcome is somehow predictable. the problem lies in the interpretation of each obtained cluster: how can we assign meaning to the partitioning obtained? The overlap of the original classes with the cluster subject to the new classification presented in the clustering representation in figures \ref{fig:robpca_clusters_over_classes} shows that in every cluster one can find at least some few representatives of the original classes. Also along the PCA's axis used to represent the clusters, there seems to be no clear tendency that can separate the original classes as intended by the objective of classifying the \textit{HDI\_rank}. In the end, the success of a classification exercise implies that the clustering is also able to split the data set into some properly separated clusters, but what indeed separates each of the obtained cluster is of little use for the classification exercise.
+
+The clustering provides a fairly clear data separation, and if the objective is to find some attribute that distinguishes between elements of some set, then clustering might aid into such a task, providing also meaning to the obtained partitions, which tends to be a challenging task. On the other hand, classification can be challenging if the explanatory variables available are in fact irrelevant to the classes that are the target of the prediction. Yet, regardless of unimpressive performance of the model obtained using the variables, it is always possible to make some interpretation of the outcome, worst case scenario, we can conclude that the used data might be irrelevant given the objective.  
+
+\section{Conclusion}
+
+From the results we can conclude that there is predictability of the HDI progress using WDI variables as predictors. If that was not the case we would expect a balanced accuracy close to 50\%, and an accuracy close to 33\% given that we have four classes and one of them is very under represented in the data set. Instead, we observed an accuracy of 44\% and balanced accuracy of 58\% (results from table \ref{table:hdi_SC}).
+
+We addressed the HDI progress prediction as a classification problem but the results suggest that it could be better tackled as a regression problem. This conclusion also derives from the strategy used to split the classes, in fact we are taking a continuous quantity and splitting it in ranges without using any natural boundary found in the distribution, as there was none. As expected, there is no natural clear split between classes and the cluster analysis also supports this conclusion. So, as further work, it would be interesting to tackle the problem with regression methods. 
+
+Also as further work, if persisting in addressing the HDI progress prediction as a classification problem, we suggest to explore the \textit{Data reduction through clustering} technique from \cite{Evans2011} and demonstrated at superficial level in appendix~\ref{appendix:altdatared}.
+
+Another hypothesis might be to try to split the data into a different set of classes using different criteria, in order to maximize the chances of having a useful classifier, and try to learn if this divisions do represent some discernible separation among the observations.
+
+What we can imply from this analysis is that, although the indicators used as predictors are available, they either are unrelated with the outcome or the time lapse considered is not relevant to the outcome: it might be that two year difference is too short for some features and too long for others, and while in some cases the effect of one effect might already have passed in the 2-year time considered, for another feature the effect is not yet reflected in the outcome. A deeper analysis, considering several periods for variation (or even a time series analysis) might improve the results.
+
+
+% \bibliographystyle{unsrt}
+\bibliographystyle{IEEEtran}
+\bibliography{library}
+
+
+\appendix
+\pagebreak
+\section{Variables list}
+\label{appendix:varlist}
+
+\begin{itemize}
+    \item demographic:
+    \begin{itemize}
+        \item dem.AdolescentFertRate: Adolescent fertility rate expressed in number of births per 1000 women ages 15-19;
+        \item dem.BirthRate: Birth rate, crude (per 1000 people);
+        \item dem.DeathRate: Death rate, crude (per 1000 people);
+        \item dem.FemalePop: Population, female (\% of total population);
+        \item dem.FertilityRate: Fertility rate, total (births per woman);
+        \item dem.LifeExpectancy: Life expectancy at birth, total (years);
+        \item dem.MortalityInfant: Mortality rate, infant (per 1000 live births);
+        \item dem.MortalityUnder5: Mortality rate, under-5 (per 1000 live births);
+        \item dem.over64: Population ages 65 and above (\% of total population);
+        \item dem.Pop0to14: Population ages 0-14 (\% of total population);
+        \item dem.Pop15to64: Population ages 15-64 (\% of total population);
+        \item dem.PopGrowth: Population growth (annual \%) *,
+    \end{itemize}
+    \item economics:
+    \begin{itemize}
+        \item eco.AgeDependancyRate: Age dependency ratio (\% of working-age population);
+        \item eco.CleanCook: Access to clean fuels and technologies for cooking (\% of population);
+        \item eco.CO2Emissions: CO2 emissions (metric tons per capita);
+        \item eco.Exports: Merchandise exports (current US\$);
+        \item eco.FoodProdIdx: Food production index (2004-2006 = 100);
+        \item eco.GDP: GDP (current US\$);
+        \item eco.Imports: Merchandise imports (current US\$);
+        \item eco.Inflation: Inflation, GDP deflator (annual \%);
+        \item eco.MerchTrade: Merchandise trade (\% of GDP),
+    \end{itemize}
+    \item geographic:
+    \begin{itemize}
+        \item geo.ArableLand: Arable land (\% of land area);
+        \item geo.RuralPop: Rural population (\% of total population);
+        \item geo.RuralPopGrowth: Rural population growth (annual \%) *;
+        \item geo.UrbanPop: Urban population (\% of total population);
+        \item geo.UrbanPopGrowth: Urban population growth (annual \%) *,
+    \end{itemize}
+    \item health and sanitation:
+    \begin{itemize}
+        \item hs.BasicSanitation: People using at least basic sanitation services (\% of population);
+        \item hs.DrinkingWater: People using at least basic drinking water services (\% of population);
+        \item hs.GovHealthExpend: Domestic general government health expenditure per capita (current US\$);
+        \item hs.OpenDefecation: People practicing open defecation (\% of population),
+    \end{itemize}
+    \item education and science:
+    \begin{itemize}
+        \item sci.Articles: Scientific and technical journal articles;
+        \item sci.EduExpense: Adjusted savings: education expenditure (\% of GNI);
+        \item sci.Internet: Individuals using the Internet (\% of population);
+        \item sci.PrimaryDuration: Primary education, duration (years);
+        \item sci.SecundaryDuration: Secondary education, duration (years);
+        \item sci.WomenBusinessLaw: Women Business and the Law Index Score (scale 1-100).
+    \end{itemize}
+\end{itemize}
+\pagebreak
+
+\section{Data reduction through clustering}
+\label{appendix:altdatared}
+
+In this appendix we demonstrate the use of the technique \textit{data reduction through clustering} as proposed in \cite{Evans2011}. Without exploring the proposed technique or the results in much detail, we will demonstrate that this different approach is a viable alternative compared to the use of mRMR plus PCA. 
+ 
+\subsection{Clustering theme data sets using $K$-means}
+
+The choice regarding the number of clusters will be taken inspecting visually the 2d projection of the first two principal components and using the average silhouette coefficient, we want it to be higher than 0.25 on all clusters. Figure~\ref{fig:themeclusters} summarizes the decision and information used to select k for each data set (\textit{i.e.} one k for each theme). 
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{figures/clusters.png}
+  \caption{Outcome of $K$-medoids for each theme.}
+  \label{fig:themeclusters}
+\end{figure}
+
+\subsection{Classification using clustering outcome}
+
+ The classification technique chosen for this task was Random Forests \cite{breiman2001random} because it can take decision trees as weak learners and these handle, by design, categorical variables such as the output from the clustering data reduction. Using Random Forests with decision trees as weak learners, we do not need to convert our variables to binary, \textit{i.e.}: to create dummies. We however need to use some strategy in order to handle the minority class (labeled \textit{negative}) so that it becomes represented in the prediction and the balanced accuracy score is not so affected. To handle imbalanced classes there are several options, we chose to use class weights because undersampling is not an option given the already small size of the dataset, and oversampling is also not a good solution when all the variables have distributions that cannot be easily modeled.
+ 
+\begin{table}[h]
+     \begin{minipage}[b]{0.60\linewidth}
+         \centering
+         \resizebox{0.9\textwidth}{!}{%
+               \begin{tabular}{l|c|c|c|c|c|}
+              \multicolumn{2}{c}{}&\multicolumn{3}{c}{Real}\\
+              \cline{3-6}
+              \multicolumn{2}{c|}{Pred}&Negative&Low&Medium&High\\
+              \cline{2-6}
+              & Negative & 1 & 0 & 2 & 0 \\
+              \cline{2-6}
+              &  Low & 5 & 26 & 14 & 9 \\
+              \cline{2-6}
+              & Medium & 6 & 16 & 22 & 20 \\
+              \cline{2-6}
+              & High & 0 & 6 & 8 & 17 \\
+              \cline{2-6}
+          \end{tabular}%
+         }
+         \caption{Confusion Matrix for Random Forest classification \newline after data reduction through clustering.}
+         \label{table:baseScoresRF}
+     \end{minipage}\hfill
+     \begin{minipage}[b]{0.4\linewidth}
+         \centering
+         \resizebox{0.9\textwidth}{!}{%
+         \begin{tabular}{l |c|c|}
+              \cline{3-3}
+              \multicolumn{2}{c|}{}&Score\\
+              \cline{2-3}
+              & Accuracy & 0.434 \\
+              \cline{2-3}
+              & Balanced Accuracy & 0.583 \\
+              \cline{2-3}
+          \end{tabular}%
+       }
+       \caption{Random Forest after data \newline reduction through clustering scores.}
+       \label{table:confmatrixRF}
+     \end{minipage}
+ \end{table}
+
+\subsection{Result analysis}
+
+The clustering applied for each of the themes, \textit{demographic}, \textit{economics}, \textit{geographic}, \textit{health and sanitation} and \textit{education and science}, reduced the data set to only 4 columns, one for each theme corresponding to the cluster identification, but excluding \textit{education and science} because the average silhouette failed to meet the established criterion ($>0.25$). 
+Taking this very reduced data set composed only of categorical columns, as input to our classifier, we were able to reach scores comparable to those achieved in section~\ref{section:classification} that used as input data sets reduced via mRMR and PCA. As conclusion, the approach presented in this appendix can be explored further as a viable alternative for the data reduction task. Moreover, this approach makes it possible to estimates the importance of each theme to the HDI progress prediction, using the feature importance derived from the Random Forest R implementation. The importance of each features would be derived from the obtained theme clusters using for instance the PCA loadings also used to visualize the clusters. 
+\pagebreak
+
+\section{Oversized figures}
+\label{appendix:overfig}
+    \begin{sidewaysfigure}[h]
+\centering
+\includegraphics[width=0.8\textheight,height=0.7\textwidth]{stat_analysis/mRMR_16_pairs.png}
+	\caption{Pairs panel plots of mRMR reduced dataset}
+	\label{fig:pairs_mRMR}
+    \end{sidewaysfigure}
+\pagebreak
+    \begin{sidewaysfigure}
+\centering
+\includegraphics[width=0.9\textheight,height=0.7\textwidth]{stat_analysis/mRMR_16_cor_heatmap.png}
+	\caption{mRMR 16 Correlation Heatmap}
+	\label{fig:corrheatmap} 
+    \end{sidewaysfigure}
+
+\end{document}
