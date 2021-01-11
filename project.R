@@ -2,6 +2,7 @@
 library(devtools) # close png
 library(caret)
 
+set.seed(42)		
 #-----------------------------------------------------------------
 # import data
 data<-read.csv("..//mRMR_reduced_data.csv", header = TRUE, sep = ",")
@@ -314,19 +315,13 @@ library(MASS)
 library(klaR)
 library(yardstick)
 library(nnet)
+library(randomForest)
 
-set.seed(42)
+#---------Standardization (convenient for LDA and QDA)------------------
 
-#-------------data load--------------------------
-
-# data sets so far:
-head(data_afterROBPCA)
-head(data_afterPCA)
-
-# scaled data
-head(data)
-# unscaled data
-head(data.unscaled)
+preproc.param <- x_train %>% preProcess(method = c("center", "scale"))
+x_train.scaled <- preproc.param %>% predict(x_train)
+x_test.scaled <- preproc.param %>% predict(x_test)
 
 #--------------test train split------------------
 
@@ -335,114 +330,19 @@ x_ROBPCA_test=data_afterROBPCA[-trainIndex, ]
 x_PCA_train=data_afterPCA[trainIndex, ]
 x_PCA_test=data_afterPCA[-trainIndex, ]
 
-
-#-----------Report metrics summary----------------
-
-showMetrics=function(pred,obs){
-  confmatrix<-confusionMatrix(data=pred,reference=obs);print(confmatrix)
-  accuracy=sum(diag(confmatrix$table))/sum(confmatrix$table)
-  message("Accuracy");print(round(accuracy,3))
-  bAccuracy=bal_accuracy_vec(truth=obs, estimate=pred,estimator="macro")
-  message("Balanced accuracy");print(round(bAccuracy,3))
-}
-
-#---------Naive Bayes (baseline)-------------------------------
-
-train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-model<- train(y=y_train$HDI_rank, x=x_train, trControl=train_control, method="nb")
-showMetrics(model$pred[,1],model$pred[,2])
-
-#------filter taking statistical analysis into account----------
-
-saOut = c("dem.MortalityInfant","dem.BirthRate.var",
-          "hs.DrinkingWater","dem.PopGrowth",
-          "dem.MortalityUnder5.var","eco.CO2Emissions",
-          "sci.EduExpense","dem.LifeExpectancy",
-          "dem.DeathRate.var","eco.AgeDependancyRate",
-          "hs.BasicSanitation","hs.GovHealthExpend",
-          "dem.AdolescentFertRate.var","dem.BirthRate")
-
-x_train <- x_train[,saOut]
-x_test <- x_test[,saOut]
-
-#---------Standardization (convenient for LDA)------------------
-
-preproc.param <- x_train %>% preProcess(method = c("center", "scale"))
-x_train.scaled <- preproc.param %>% predict(x_train)
-x_test.scaled <- preproc.param %>% predict(x_test)
-
-#-----------------------LDA-------------------------------------
-
-train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
-              prior = c(0.07,0.31,0.31,0.31), method="lda")
-showMetrics(model$pred[,1],model$pred[,2])
-
-#-----------------------QDA-------------------------------------
-
-train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
-              prior = c(0.07,0.31,0.31,0.31), method="qda")
-showMetrics(model$pred[,1],model$pred[,2])
-
-#-----------------------KNN-------------------------------------
-
-train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
-              method="knn", tuneLength = 20)
-model$results
-# The final value used for the model was k = 15.
-showMetrics(model$pred[,1],model$pred[,2])
-
-#--------------multinomial Logistic regression-------------------
-
-train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-model<- train(y=y_train$HDI_rank, x=x_train.scaled, trControl=train_control, 
-              method="multinom")
-model$results
-# The final value used for the model was k = 15.
-showMetrics(model$pred[,1],model$pred[,2])
-
-
-
-
-#-----------------------final-------------------------------------
-# LDA outperformed others
-
-LDAclassifier <- lda(x=x_train.scaled, grouping=y_train$HDI_rank, 
-                     prior = c(0.07,0.31,0.31,0.31), CV=FALSE)
-predictions <- predict(LDAclassifier, newdata=x_test.scaled)
-confmatrix<-confusionMatrix(predictions$class, y_test$HDI_rank)
-showMetrics(predictions$class, y_test$HDI_rank)
-lda.data <- cbind(x_train.scaled, predict(LDAclassifier)$x)
-ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = y_train$`HDI_rank`))
-
-
-#--------------Classification after Clustering----------------
-
-library(randomForest)
-library(caret)
-library(klaR)
-library(dplyr)
-library(yardstick)
-
 #-------------data load--------------------------
 
 
 #Dataset after clustering
 WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
-
 cluster_data <- WDI_CLUSTERING[, -c(1)]
-
 c_data <- cluster_data[, -c(15)]
 
 #Cluster output
 c_data_outcome <- cluster_data[,c(14,15)]
-
 colnames(c_data_outcome) <- c('HDI_var', 'HDI_rank')
-
-c_data_outcome$`HDI_rank` <- factor(c_data_outcome$`HDI_rank`, levels = c(1,2,3), labels = c("One", "Two", "Three"))
-
+c_data_outcome$`HDI_rank` <- factor(c_data_outcome$HDI_rank, 
+                                    levels = c(1,2,3), labels = c("One", "Two", "Three"))
 
 #--------------test train split------------------
 
@@ -450,25 +350,20 @@ c_data_outcome$`HDI_rank` <- factor(c_data_outcome$`HDI_rank`, levels = c(1,2,3)
 x_cluster_train = c_data[trainIndex, ]
 x_cluster_test = c_data[-trainIndex, ]
 
-y_cluster_train = c_data_outcome[trainIndex, ]
-y_cluster_test = c_data_outcome[-trainIndex, ]
+y_cluster_train = c_data_outcome[trainIndex, 2]
+y_cluster_test = c_data_outcome[-trainIndex, 2]
 
 #-----------Report metrics summary----------------
 
-showMetrics=function(model, x, y){
-  handlem<-function(model){
-    tryCatch(predict(model, newdata=x, type="class"), error = function(e) model)
-  }
-  pred=handlem(model)
-  
-  conf=table(pred,y$`HDI_rank`)
+showMetrics=function(pred, y){
+  conf=table(pred,y)
   cat("\nConfusion matrix:")
   print(conf)
   
   accuracy=sum(diag(conf))/sum(conf)
   cat("\nAccuracy", round(accuracy,3) * 100, sep = ": ")
   
-  bAccuracy=bal_accuracy_vec(y$`HDI_rank`,pred,estimator="macro")
+  bAccuracy=bal_accuracy_vec(y,pred,estimator="macro")
   cat("\n\nBalanced accuracy", round(bAccuracy,3)*100, sep = ": ")
   
   diag = diag(conf)
@@ -483,106 +378,72 @@ showMetrics=function(model, x, y){
   print(data.frame(precision, recall, f1))
 }
 
-
-data <- list(x_train, x_test, y_train, y_test, x_cluster_train, x_cluster_test, y_cluster_train, y_cluster_test)
-
-
-runClassification=function(data){
-  
-  #Dataset Data
-  x_train=data.frame(data[[1]])
-  x_test=data.frame(data[[2]])
-  
-  y_train=data.frame(data[[3]])
-  y_test=data.frame(data[[4]])
-  
-  #Dataset with clusters
-  x_cluster_train = data.frame(data[[5]])
-  x_cluster_test = data.frame(data[[6]])
-  
-  y_cluster_train = data.frame(data[[7]])
-  y_cluster_test = data.frame(data[[8]])
+runClassification=function(x,y,prior){
   
   #--------Random Forest--------
-  
-  #--------classification using cluster output--------
-  
-  #verify if random forest is adequate with cross-validation
-  
-  Fit.RF <- rfcv(x_cluster_train,
-                 y_cluster_train$HDI_rank, 
-                 ntrees=200,
-                 cv.fold=5) 
-  
-  with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
-  
-  # error close to 0 -> optimal algorithm
-  
-  
-  model<-randomForest(y_cluster_train$HDI_rank ~., 
-                      data=x_cluster_train,
-                      ntrees=200)
-  
-  # verify for test set
-  rf.pred=predict(model, x_cluster_test, type="class")
-  predMatrix = with(x_cluster_test, table(rf.pred, y_cluster_test$HDI_rank))
-  
-  showMetrics(rf.pred, x_cluster_test, y_cluster_test)
-  importance(model)
-  
-  
-  #----------classification using wdi data--------------------------
-  
-  #verify if random forest is adequate with cross-validation
-  
-  Fit.RF <- rfcv(x_train,
-                 y_train$HDI_rank, 
-                 ntrees=200,
-                 cv.fold=5) 
-  
-  with(Fit.RF, plot(n.var, error.cv, type="b", col="red")) 
-  
-  # error does not tend to 0 (tends to 0.50), 
-  # probably not an optimal algorithm or dataset not otimized
-  
-  
-  model<-randomForest(y_train$HDI_rank ~., 
-                      data=x_train,
-                      ntrees=200)
-  
-  # verify for test set
-  rf.pred=predict(model, x_test, type="class")
-  predMatrix = with(x_test, table(rf.pred, y_test$HDI_rank))
-  
-  showMetrics(rf.pred, x_test, y_test)
-  importance(model)
+  message("rf")
+  model <- train(x, y, method = "rf", 
+                 trControl = trainControl(method = "cv", 
+                                          number = 5,
+                                          savePredictions = TRUE))
+  showMetrics(model$pred[,1],model$pred[,2])
   
   
   #----------Naive Bayes----------
+  message("nb")
+  model <- train(x, y, method = "nb", 
+                 trControl = trainControl(method = "cv", 
+                                          number = 5,
+                                          savePredictions = TRUE))
+  showMetrics(model$pred[,1],model$pred[,2])
   
-  #--------classification using cluster output--------
+  #---------------LDA-----------------
+  message("lda")  
+  train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+  model<- train(y=y, x=x, trControl=train_control, 
+                prior = prior, method="lda")
+  showMetrics(model$pred[,1],model$pred[,2])
   
-  NBclassifier <- train(x_cluster_train, 
-                        y_cluster_train$HDI_rank, 
-                        method = "nb", 
-                        trControl = trainControl(method = "cv", number = 5))
+  #---------------QDA-------------------
+  message("qda")   
+  train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+  model<- train(y=y, x=x, trControl=train_control, 
+                prior = prior, method="qda")
+  showMetrics(model$pred[,1],model$pred[,2])
   
-  pred <- predict(NBclassifier, newdata=x_cluster_test, type="raw")
+  #----------------KNN------------------
+  message("knn") 
+  train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+  model<- train(y=y, x=x, trControl=train_control, 
+                method="knn", tuneLength = 20)
+  showMetrics(model$pred[,1],model$pred[,2])
   
-  showMetrics(pred, x_cluster_test, y_cluster_test)
-  
-  
-  
-  #----------classification using wdi data--------------------------
-  
-  NBclassifier <- train(x_train, 
-                        y_train$HDI_rank, 
-                        method = "nb", 
-                        trControl = trainControl(method = "cv", number = 5))
-  
-  pred <- predict(NBclassifier, newdata=x_test, type="raw")
-  
-  showMetrics(pred, x_test, y_test)
+  #----multinomial Logistic regression----
+  message("mlr") 
+  train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+  model<- train(y=y, x=x, trControl=train_control, 
+                method="multinom")
+  showMetrics(model$pred[,1],model$pred[,2])
 }
 
-runClassification(data)
+prior=c(0.07,0.31,0.31,0.31)
+runClassification(x_train.scaled, y_train, prior)
+
+runClassification(x_ROBPCA_train, y_train, prior)
+
+runClassification(x_PCA_train, y_train, prior)
+
+prior=c(table(y_cluster_train)[1],
+        table(y_cluster_train)[2],
+        table(y_cluster_train)[3])/length(y_cluster_train)
+runClassification(x_cluster_train, y_cluster_train, prior)
+
+#-----------------------final-------------------------------------
+# LDA outperformed others
+
+QDAclassifier <- qda(x=x_train.scaled, grouping=y_train, 
+                     prior = c(0.07,0.31,0.31,0.31), CV=FALSE)
+predictions <- predict(QDAclassifier, newdata=x_test.scaled)
+confmatrix<-confusionMatrix(predictions$class, y_test)
+showMetrics(predictions$class, y_test)
+
