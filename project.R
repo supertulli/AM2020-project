@@ -332,7 +332,6 @@ x_PCA_test=data_afterPCA[-trainIndex, ]
 
 #-------------data load--------------------------
 
-
 #Dataset after clustering
 WDI_CLUSTERING <- read.csv("WDI_CLUSTERING.csv")
 cluster_data <- WDI_CLUSTERING[, -c(1)]
@@ -356,6 +355,8 @@ y_cluster_test = c_data_outcome[-trainIndex, 2]
 #-----------Report metrics summary----------------
 
 showMetrics=function(pred, y){
+  #confmatrix<-confusionMatrix(data=pred,reference=y);print(confmatrix)
+  
   conf=table(pred,y)
   cat("\nConfusion matrix:")
   print(conf)
@@ -370,8 +371,8 @@ showMetrics=function(pred, y){
   rowsums = apply(conf, 1, sum)
   colsums = apply(conf, 2, sum)
   
-  precision = diag / colsums 
-  recall = diag / rowsums 
+  precision = diag / rowsums  
+  recall = diag / colsums
   f1 = 2 * precision * recall / (precision + recall) 
   
   cat("\n\n")
@@ -438,6 +439,7 @@ prior=c(table(y_cluster_train)[1],
         table(y_cluster_train)[3])/length(y_cluster_train)
 runClassification(x_cluster_train, y_cluster_train, prior)
 
+
 #-----------------------final-------------------------------------
 # LDA outperformed others
 
@@ -446,4 +448,22 @@ QDAclassifier <- qda(x=x_train.scaled, grouping=y_train,
 predictions <- predict(QDAclassifier, newdata=x_test.scaled)
 confmatrix<-confusionMatrix(predictions$class, y_test)
 showMetrics(predictions$class, y_test)
+
+#-----------------------final-------------------------------------
+# LR outperformed others
+
+LRclassifier <- train(y=y_cluster_train, x=x_cluster_train, 
+                              method="multinom")
+predictions <- predict(LRclassifier, newdata=x_cluster_test)
+confmatrix<-confusionMatrix(predictions, y_cluster_test)
+showMetrics(predictions, y_cluster_test)
+
+#-----------------------final-------------------------------------
+# RF outperformed others
+
+#RFclassifier <- train(y=y_cluster_train, x=x_cluster_train, 
+#                      method="rf")
+#predictions <- predict(RFclassifier, newdata=x_cluster_test)
+#confmatrix<-confusionMatrix(predictions, y_cluster_test)
+#showMetrics(predictions, y_cluster_test)
 
