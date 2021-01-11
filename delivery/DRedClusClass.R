@@ -1,5 +1,4 @@
 # generic libraries
-library(devtools) # close png
 library(caret)
 
 set.seed(42)		
@@ -49,13 +48,11 @@ k_0.8} # show the value of k_0.8
 k = min(k_1,k_0.8);k
 
 # confirm the value of k by plotting the eigenvalues and finding the elbow
-png(filename = "figures/scree_pcaClassic.png", width = 800, height = 600)
 screeplot(results_pcaClassic, 
           type="lines",
           cex = 0.2, 
           npcs = length(results_pcaClassic$eigenvalues),
           main = "Eigenvalues of each component"); abline(h = mean(results_pcaClassic$eigenvalues), col = 3)
-dev.off()
 
 # loadings visual analysis
 bp_classic_names <- c(rep("PC1" , dim(results_pcaClassic$loadings)[1]) , rep("PC2" , dim(results_pcaClassic$loadings)[1]) , 
@@ -63,14 +60,12 @@ bp_classic_names <- c(rep("PC1" , dim(results_pcaClassic$loadings)[1]) , rep("PC
 variables <- rep(rownames(results_pcaClassic$loadings),4)
 bp_classic_loadings <- c(results_pcaClassic$loadings[,1], results_pcaClassic$loadings[,2], results_pcaClassic$loadings[,3], results_pcaClassic$loadings[,4])
 bp_data_classic <- data.frame(bp_classic_names,variables,bp_classic_loadings)
-# plot
-png(filename = "figures/loadings_pcaClassic.png", width = 800, height = 600)
+# plot loadings
 ggplot(bp_data_classic, aes(fill=bp_classic_loadings, y=variables, x=bp_classic_loadings, size=4)) + 
   geom_bar(position="stack", stat="identity") +
   facet_wrap(~bp_classic_names, nrow = 2) +
   theme(legend.position="none") +
   xlab("Relative Importance")
-dev.off()
 
 # tranform both the training and test set
 data_afterPCA<-predict(results_pcaClassic, data)[,1:k] # using the full dataset 
@@ -82,32 +77,26 @@ results_pcaRobust<-PcaHubert(x_train,scale=TRUE,crit.pca.distances = 0.999)
 summary(results_pcaRobust)
 
 # plot the eigenvalues and find the elbow
-png(filename = "figures/scree_pcaRobust.png", width = 800, height = 600)
 screeplot(results_pcaRobust, 
           type="lines",
           cex = 0.2, 
           npcs = length(results_pcaRobust$eigenvalues),
           main = "Eigenvalues of each component"); abline(h = mean(results_pcaRobust$eigenvalues), col = 3)
-dev.off()
 
 #plot the outliers detected by the robust pca
-png(filename = "figures/outliers_pcaRobust.png", width = 800, height = 600)
 plot(results_pcaRobust,pch=20,lwd=2,col=(2-results_pcaRobust$flag))
-dev.off()
 
 # loadings visual analysis
 bp_robust_names <- c(rep("PC1" , dim(results_pcaRobust$loadings)[1]) , rep("PC2" , dim(results_pcaRobust$loadings)[1]) , rep("PC3" , dim(results_pcaRobust$loadings)[1]))
 variables <- rep(rownames(results_pcaRobust$loadings),3)
 bp_robust_loadings <- c(results_pcaRobust$loadings[,1], results_pcaRobust$loadings[,2], results_pcaRobust$loadings[,3])
 bp_robust_data <- data.frame(bp_robust_names,variables,bp_robust_loadings)
-# plot
-png(filename = "figures/loadings_pcaRobust.png", width = 800, height = 600)
+# plot loadings
 ggplot(bp_robust_data, aes(fill=bp_robust_loadings, y=variables, x=bp_robust_loadings)) + 
   geom_bar(position="dodge", stat="identity") +
   facet_wrap(~bp_robust_names) +
   theme(legend.position="none") +
   xlab("Relative Importance")
-dev.off()
 
 # transform data (only 3 PC's so consider the whole set)
 data_afterROBPCA<-predict(results_pcaRobust,data)
