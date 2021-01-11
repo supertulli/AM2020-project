@@ -1,11 +1,14 @@
 # generic libraries
+getwd()
+setwd("/onedrive/OneDrive - Nokia/scicolab/ist/MA/2020/proj/GIT-AM2020-project/AM2020-project/")
+
 library(devtools) # close png
 library(caret)
 
 set.seed(42)		
 #-----------------------------------------------------------------
 # import data
-data<-read.csv("..//mRMR_reduced_data.csv", header = TRUE, sep = ",")
+data<-read.csv(".//mRMR_reduced_data.csv", header = TRUE, sep = ",")
 row.names(data) = data[,1] # set row names
 data = data[, -1] # remove row names
 
@@ -420,14 +423,17 @@ runClassification=function(x,y,prior){
   showMetrics(model$pred[,1],model$pred[,2])
   
   #----multinomial Logistic regression----
-  message("mlr") 
-  train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
-  model<- train(y=y, x=x, trControl=train_control, 
-                method="multinom")
-  showMetrics(model$pred[,1],model$pred[,2])
+  #message("mlr") 
+  #train_control<- trainControl(method="cv", number=5, savePredictions = TRUE)
+  #model<- train(y=y, x=x, trControl=train_control, 
+  #              method="multinom")
+  #showMetrics(model$pred[,1],model$pred[,2])
 }
 
-prior=c(0.07,0.31,0.31,0.31)
+prior=c(table(y_train)[1],
+        table(y_train)[2],
+        table(y_train)[3],
+        table(y_train)[4])/length(y_train)
 runClassification(x_train.scaled, y_train, prior)
 
 runClassification(x_ROBPCA_train, y_train, prior)
@@ -441,29 +447,29 @@ runClassification(x_cluster_train, y_cluster_train, prior)
 
 
 #-----------------------final-------------------------------------
-# LDA outperformed others
-
-QDAclassifier <- qda(x=x_train.scaled, grouping=y_train, 
-                     prior = c(0.07,0.31,0.31,0.31), CV=FALSE)
-predictions <- predict(QDAclassifier, newdata=x_test.scaled)
-confmatrix<-confusionMatrix(predictions$class, y_test)
-showMetrics(predictions$class, y_test)
-
-#-----------------------final-------------------------------------
-# LR outperformed others
-
-LRclassifier <- train(y=y_cluster_train, x=x_cluster_train, 
-                              method="multinom")
-predictions <- predict(LRclassifier, newdata=x_cluster_test)
-confmatrix<-confusionMatrix(predictions, y_cluster_test)
-showMetrics(predictions, y_cluster_test)
+#LDAclassifier <- lda(x=x_ROBPCA_train, grouping=y_train, 
+#                     prior = c(0.07,0.31,0.31,0.31), CV=FALSE)
+#predictions <- predict(LDAclassifier, newdata=x_ROBPCA_test)
+#confmatrix<-confusionMatrix(predictions$class, y_test)
+#showMetrics(predictions$class, y_test)
+#lda.data <- as.data.frame(cbind(x_ROBPCA_test, predict(LDAclassifier)$x))
+#ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = y_test))
 
 #-----------------------final-------------------------------------
 # RF outperformed others
 
-#RFclassifier <- train(y=y_cluster_train, x=x_cluster_train, 
-#                      method="rf")
-#predictions <- predict(RFclassifier, newdata=x_cluster_test)
-#confmatrix<-confusionMatrix(predictions, y_cluster_test)
-#showMetrics(predictions, y_cluster_test)
+RFclassifier <- train(y=y_train, x=x_train, 
+                      method="rf")
+predictions <- predict(RFclassifier, newdata=x_test)
+confmatrix<-confusionMatrix(predictions, y_test)
+showMetrics(predictions, y_test)
+
+#-----------------------final-------------------------------------
+# RF outperformed others
+
+RFclassifier <- train(y=y_cluster_train, x=x_cluster_train, 
+                      method="rf")
+predictions <- predict(RFclassifier, newdata=x_cluster_test)
+confmatrix<-confusionMatrix(predictions, y_cluster_test)
+showMetrics(predictions, y_cluster_test)
 
